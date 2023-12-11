@@ -2,6 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../../Go_WorkSpace/.idea/Go_WorkSpace.iml" filepath="$PROJECT_DIR$/../../Go_WorkSpace/.idea/Go_WorkSpace.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../cache/.idea/cache.iml" filepath="$PROJECT_DIR$/../cache/.idea/cache.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../geektime-basic-go-master/.idea/geektime-basic-go-master.iml" filepath="$PROJECT_DIR$/../../geektime-basic-go-master/.idea/geektime-basic-go-master.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../gotools/.idea/gotools.iml" filepath="$PROJECT_DIR$/../gotools/.idea/gotools.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/webook.iml" filepath="$PROJECT_DIR$/.idea/webook.iml" />
     </modules>
   </component>

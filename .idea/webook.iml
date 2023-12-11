@@ -5,5 +5,9 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="gotools" />
+    <orderEntry type="module" module-name="cache" />
+    <orderEntry type="module" module-name="geektime-basic-go-master" />
+    <orderEntry type="module" module-name="Go_WorkSpace" />
   </component>
 </module>
