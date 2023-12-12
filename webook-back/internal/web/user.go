@@ -3,7 +3,10 @@ package web
 import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
+	"github.com/zht-account/webook/internal/domain"
+	"github.com/zht-account/webook/internal/service"
 	"net/http"
+	"time"
 )
 
 var _ handler = &UserHandler{}
@@ -15,26 +18,59 @@ const (
 )
 
 type UserHandler struct {
+	srv              *service.UserService
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
 }
 
-func NewUserHandler() *UserHandler {
+func NewUserHandler(srv *service.UserService) *UserHandler {
 	return &UserHandler{
+		srv:              srv,
 		emailRegexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
 		passwordRegexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
 	}
 }
 
 func (c *UserHandler) Login(ctx *gin.Context) {
-
+	type LoginReq struct {
+		Email    string `form:"email" json:"email"`
+		Password string `form:"password" json:"password"`
+	}
+	var req LoginReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	isEmail, err := c.emailRegexExp.MatchString(req.Email)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	if !isEmail {
+		ctx.String(http.StatusOK, "邮箱不正确")
+		return
+	}
+	isPassword, err := c.passwordRegexExp.MatchString(req.Password)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	if !isPassword {
+		ctx.String(http.StatusOK, "密码格式不正确")
+		return
+	}
+	_, err = c.srv.Login(ctx, req.Email, req.Password)
+	if err != nil {
+		ctx.String(http.StatusOK, "账号信息错误")
+		return
+	}
+	ctx.String(http.StatusOK, "登录成功")
 }
 
 func (c *UserHandler) SignUp(ctx *gin.Context) {
 	type SingUpReq struct {
-		Email           string `json:"email"`
-		Password        string `json:"password"`
-		ConfirmPassword string `json:"confirmPassword"`
+		Email           string `form:"email" json:"email"`
+		Password        string `form:"password" json:"password"`
+		ConfirmPassword string `form:"confirmPassword" json:"confirmPassword"`
 	}
 	var req SingUpReq
 	if err := ctx.Bind(&req); err != nil {
@@ -62,7 +98,17 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "两次输入的密码不相同")
 		return
 	}
-	ctx.String(http.StatusOK, "正在注册....")
+
+	err = c.srv.Signup(ctx, domain.User{
+		Email:    req.Email,
+		Password: req.Password,
+		Ctime:    time.Now(),
+	})
+	if err != nil {
+		ctx.String(http.StatusOK, "注册失败")
+		return
+	}
+	ctx.String(http.StatusOK, "注册成功")
 }
 
 func (c *UserHandler) Edit(ctx *gin.Context) {
