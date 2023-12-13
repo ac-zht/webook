@@ -3,6 +3,7 @@ package web
 import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/zht-account/webook/internal/domain"
 	"github.com/zht-account/webook/internal/service"
 	"net/http"
@@ -15,12 +16,27 @@ const (
 	emailRegexPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
 	// 和上面比起来，用 ` 看起来就比较清爽
 	passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
+	userIdKey            = "userId"
+	JWTKey               = "abc"
 )
 
 type UserHandler struct {
 	srv              *service.UserService
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
+}
+
+type Result struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data any    `json:"data"`
+}
+
+type UserClaims struct {
+	Id        int64
+	UserAgent string
+	Ssid      string
+	jwt.RegisteredClaims
 }
 
 func NewUserHandler(srv *service.UserService) *UserHandler {
@@ -38,32 +54,55 @@ func (c *UserHandler) Login(ctx *gin.Context) {
 	}
 	var req LoginReq
 	if err := ctx.Bind(&req); err != nil {
+		ctx.JSON(http.StatusOK, Result{Msg: "参数错误"})
 		return
 	}
 	isEmail, err := c.emailRegexExp.MatchString(req.Email)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
+		ctx.JSON(http.StatusOK, Result{Msg: "系统错误"})
 		return
 	}
 	if !isEmail {
-		ctx.String(http.StatusOK, "邮箱不正确")
+		ctx.JSON(http.StatusOK, Result{Msg: "邮箱格式不正确"})
 		return
 	}
 	isPassword, err := c.passwordRegexExp.MatchString(req.Password)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
+		ctx.JSON(http.StatusOK, Result{Msg: "系统错误"})
 		return
 	}
 	if !isPassword {
-		ctx.String(http.StatusOK, "密码格式不正确")
+		ctx.JSON(http.StatusOK, Result{Msg: "密码格式不正确"})
 		return
 	}
-	_, err = c.srv.Login(ctx, req.Email, req.Password)
+	u, err := c.srv.Login(ctx, req.Email, req.Password)
+	if err == service.ErrInvalidUserOrPassword {
+		ctx.JSON(http.StatusOK, Result{Msg: "用户名或密码错误"})
+		return
+	}
+	//sess := sessions.Default(ctx)
+	//sess.Set(userIdKey, u.Id)
+	//sess.Options(sessions.Options{
+	//    MaxAge: 60,
+	//})
+	//err = sess.Save()
+	//if err != nil {
+	//    ctx.JSON(http.StatusOK, Result{Msg: "服务器异常"})
+	//    return
+	//}
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, UserClaims{
+		Id: u.Id,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+		},
+	})
+	tokenStr, err := token.SignedString(JWTKey)
 	if err != nil {
-		ctx.String(http.StatusOK, "账号信息错误")
+		ctx.JSON(http.StatusOK, Result{Msg: "系统异常"})
 		return
 	}
-	ctx.String(http.StatusOK, "登录成功")
+	ctx.Header("x-jwt-token", tokenStr)
+	ctx.JSON(http.StatusOK, Result{Msg: "登录成功"})
 }
 
 func (c *UserHandler) SignUp(ctx *gin.Context) {

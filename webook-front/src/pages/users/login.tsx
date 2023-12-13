@@ -11,7 +11,6 @@ const onFinish = (values: any) => {
                 alert(res.statusText);
                 return
             }
-            alert(res.data)
             router.push('/articles/list')
         }).catch((err) => {
             alert(err);
