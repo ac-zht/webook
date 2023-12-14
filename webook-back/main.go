@@ -30,6 +30,7 @@ func initWebServer() *gin.Engine {
 		},
 		MaxAge: 12 * time.Hour,
 	}))
+	//session存储到cookie
 	store := cookie.NewStore([]byte("secret"))
 	//store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
 	//    []byte("abc"),
@@ -38,8 +39,12 @@ func initWebServer() *gin.Engine {
 	//    panic(err)
 	//}
 	server.Use(sessions.Sessions("ssid", store))
-	login := &middleware.LoginMiddlewareBuilder{}
+	//登录检测
+	//login := &middleware.LoginMiddlewareBuilder{}
+	login := &middleware.LoginJWTMiddlewareBuilder{}
 	server.Use(login.CheckLogin())
+	//请求限流
+	server.Use()
 	return server
 }
 

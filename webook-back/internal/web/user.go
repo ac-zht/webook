@@ -90,13 +90,13 @@ func (c *UserHandler) Login(ctx *gin.Context) {
 	//    ctx.JSON(http.StatusOK, Result{Msg: "服务器异常"})
 	//    return
 	//}
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, UserClaims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
 		Id: u.Id,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
 		},
 	})
-	tokenStr, err := token.SignedString(JWTKey)
+	tokenStr, err := token.SignedString([]byte(JWTKey))
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{Msg: "系统异常"})
 		return
