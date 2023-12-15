@@ -47,7 +47,7 @@ func NewUserHandler(srv *service.UserService) *UserHandler {
 	}
 }
 
-func (c *UserHandler) Login(ctx *gin.Context) {
+func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 	type LoginReq struct {
 		Email    string `form:"email" json:"email"`
 		Password string `form:"password" json:"password"`
@@ -91,9 +91,10 @@ func (c *UserHandler) Login(ctx *gin.Context) {
 	//    return
 	//}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
-		Id: u.Id,
+		Id:        u.Id,
+		UserAgent: ctx.GetHeader("User-Agent"),
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 10)),
 		},
 	})
 	tokenStr, err := token.SignedString([]byte(JWTKey))
@@ -153,13 +154,33 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 func (c *UserHandler) Edit(ctx *gin.Context) {
 }
 
-func (c *UserHandler) Profile(ctx *gin.Context) {
+func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
+	type Profile struct {
+		Email    string
+		Phone    string
+		Nickname string
+		Birthday string
+		AboutMe  string
+	}
+	uc := ctx.MustGet("user").(UserClaims)
+	u, err := c.srv.Profile(ctx, uc.Id)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	ctx.JSON(http.StatusOK, Profile{
+		Email:    u.Email,
+		Phone:    u.Phone,
+		Nickname: u.Nickname,
+		Birthday: u.Birthday,
+		AboutMe:  u.AboutMe,
+	})
 }
 
 func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/users")
 	ug.POST("/signup", c.SignUp)
-	ug.POST("/login", c.Login)
+	ug.POST("/login", c.LoginJWT)
 	ug.POST("/edit", c.Edit)
-	ug.POST("/profile", c.Profile)
+	ug.POST("/profile", c.ProfileJWT)
 }

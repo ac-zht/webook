@@ -34,6 +34,10 @@ func (*LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 		token, err := jwt.ParseWithClaims(tokenStr, &uc, func(token *jwt.Token) (interface{}, error) {
 			return web.JWTKey, nil
 		})
+		if ctx.GetHeader("User-Agent") != uc.UserAgent {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 		expireTime, err := uc.GetExpirationTime()
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
@@ -43,6 +47,7 @@ func (*LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+		ctx.Set("user", uc.Id)
 		if expireTime.Sub(time.Now()) < time.Second*50 {
 			uc.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
 			newToken, err := token.SignedString(web.JWTKey)

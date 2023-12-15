@@ -5,11 +5,13 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/zht-account/webook/internal/repository"
 	"github.com/zht-account/webook/internal/repository/dao"
 	"github.com/zht-account/webook/internal/service"
 	"github.com/zht-account/webook/internal/web"
 	"github.com/zht-account/webook/internal/web/middleware"
+	"github.com/zht-account/webook/pkg/ginx/middleware/ratelimit"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"strings"
@@ -44,7 +46,12 @@ func initWebServer() *gin.Engine {
 	login := &middleware.LoginJWTMiddlewareBuilder{}
 	server.Use(login.CheckLogin())
 	//请求限流
-	server.Use()
+	cmd := redis.NewClient(&redis.Options{
+		Addr:     "120.24.91.113:7001",
+		Password: "uphill",
+		DB:       0,
+	})
+	server.Use(ratelimit.NewBuilder(cmd, time.Minute, 100).Build())
 	return server
 }
 
@@ -61,10 +68,10 @@ func initDB() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-	err = dao.InitTables(db)
-	if err != nil {
-		panic(err)
-	}
+	//err = dao.InitTables(db)
+	//if err != nil {
+	//    panic(err)
+	//}
 	return db
 }
 

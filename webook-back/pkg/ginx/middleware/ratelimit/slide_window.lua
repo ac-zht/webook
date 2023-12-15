@@ -4,8 +4,24 @@
 --- DateTime: 2023/12/14 18:00
 ---
 
---local key = KEYS[1]
-----窗口大小
---local window = tonumber(ARGV[1])
-----阀值
---local threshold = tonumber(ARGV[2])
+--滑动窗口算法
+local key = KEYS[1]
+-- 窗口大小
+local window = tonumber(ARGV[1])
+-- 阀值
+local threshold = tonumber(ARGV[2])
+
+local now = tonumber(ARGV[3])
+-- 窗口起始时间
+local start = now - window
+
+redis.call('ZREMRANGEBYSCORE', key, '-inf', start)
+local cnt = redis.call('ZCOUNT', key, '-inf', '+inf')
+if cnt >= threshold then
+    --限流
+    return "true"
+else
+    redis.call('ZADD', key, now, now)
+    redis.call('PEXPIRE', key, window)
+    return "false"
+end

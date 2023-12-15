@@ -41,3 +41,11 @@ func (srv *UserService) Login(ctx context.Context, email, password string) (doma
 	}
 	return u, err
 }
+
+func (srv *UserService) Profile(ctx context.Context, id int64) (domain.User, error) {
+	u, err := srv.repo.FindById(ctx, id)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return u, err
+}
