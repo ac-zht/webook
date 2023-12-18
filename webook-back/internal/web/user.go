@@ -152,6 +152,40 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 }
 
 func (c *UserHandler) Edit(ctx *gin.Context) {
+	type Request struct {
+		Nickname string `json:"nickname"`
+		Birthday string `json:"birthday"`
+		AboutMe  string `json:"aboutMe"`
+	}
+	var req Request
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	if req.Nickname == "" {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "昵称不能为空"})
+		return
+	}
+	if len(req.AboutMe) > 1024 {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "简介内容过长"})
+	}
+	birthday, err := time.Parse(time.DateOnly, req.Birthday)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "日期格式错误"})
+		return
+	}
+
+	uc := ctx.MustGet("user").(UserClaims)
+	err = c.srv.UpdateNonSensitiveInfo(ctx, domain.User{
+		Id:       uc.Id,
+		Nickname: req.Nickname,
+		AboutMe:  req.AboutMe,
+		Birthday: birthday,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
+		return
+	}
+	ctx.JSON(http.StatusOK, Result{Msg: "OK"})
 }
 
 func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
@@ -159,7 +193,7 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 		Email    string
 		Phone    string
 		Nickname string
-		Birthday string
+		Birthday time.Time
 		AboutMe  string
 	}
 	uc := ctx.MustGet("user").(UserClaims)
@@ -182,5 +216,5 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.POST("/signup", c.SignUp)
 	ug.POST("/login", c.LoginJWT)
 	ug.POST("/edit", c.Edit)
-	ug.POST("/profile", c.ProfileJWT)
+	ug.GET("/profile", c.ProfileJWT)
 }

@@ -19,7 +19,7 @@ type User struct {
 	Email    string `gorm:"unique"`
 	Phone    string `gorm:"unique"`
 	Nickname string
-	Birthday string
+	Birthday int64
 	AboutMe  string `gorm:"column:about_me"`
 
 	Password string
@@ -67,4 +67,9 @@ func (ud *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
 		return User{}, err
 	}
 	return user, nil
+}
+
+func (ud *UserDAO) UpdateById(ctx context.Context, id int64) (User, error) {
+	var user User
+	err := ud.db.WithContext(ctx).Where("id = ?")
 }

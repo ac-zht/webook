@@ -47,9 +47,9 @@ func initWebServer() *gin.Engine {
 	server.Use(login.CheckLogin())
 	//请求限流
 	cmd := redis.NewClient(&redis.Options{
-		Addr:     "120.24.91.113:7001",
+		Addr:     "120.24.91.113:7002",
 		Password: "uphill",
-		DB:       0,
+		DB:       2,
 	})
 	server.Use(ratelimit.NewBuilder(cmd, time.Minute, 100).Build())
 	return server

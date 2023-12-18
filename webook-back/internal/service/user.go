@@ -49,3 +49,7 @@ func (srv *UserService) Profile(ctx context.Context, id int64) (domain.User, err
 	}
 	return u, err
 }
+
+func (srv *UserService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
+	return nil
+}
