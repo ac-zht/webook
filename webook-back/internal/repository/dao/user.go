@@ -17,14 +17,14 @@ type UserDAO struct {
 type User struct {
 	Id       int64  `gorm:"primaryKey,autoIncrement"`
 	Email    string `gorm:"unique"`
+	Password string
 	Phone    string `gorm:"unique"`
 	Nickname string
 	Birthday int64
-	AboutMe  string `gorm:"column:about_me"`
+	AboutMe  string `gorm:"column:about_me;type:varchar(1024)"`
 
-	Password string
-	Ctime    int64
-	Utime    int64
+	Ctime int64
+	Utime int64
 }
 
 func InitTables(db *gorm.DB) error {
@@ -69,7 +69,6 @@ func (ud *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	return user, nil
 }
 
-func (ud *UserDAO) UpdateById(ctx context.Context, id int64) (User, error) {
-	var user User
-	err := ud.db.WithContext(ctx).Where("id = ?")
+func (ud *UserDAO) UpdateNonZeroFields(ctx context.Context, u User) error {
+	return ud.db.Updates(&u).Error
 }

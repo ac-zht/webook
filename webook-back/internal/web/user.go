@@ -193,7 +193,7 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 		Email    string
 		Phone    string
 		Nickname string
-		Birthday time.Time
+		Birthday string
 		AboutMe  string
 	}
 	uc := ctx.MustGet("user").(UserClaims)
@@ -206,7 +206,7 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 		Email:    u.Email,
 		Phone:    u.Phone,
 		Nickname: u.Nickname,
-		Birthday: u.Birthday,
+		Birthday: u.Birthday.Format(time.DateOnly),
 		AboutMe:  u.AboutMe,
 	})
 }

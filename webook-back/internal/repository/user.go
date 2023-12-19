@@ -51,9 +51,42 @@ func (ur *UserRepository) FindById(ctx context.Context, id int64) (domain.User, 
 		Email:    u.Email,
 		Phone:    u.Phone,
 		Nickname: u.Nickname,
-		Birthday: time.Unix(u.Birthday, 0),
+		Birthday: time.UnixMilli(u.Birthday),
 		AboutMe:  u.AboutMe,
 		Password: u.Password,
 		Ctime:    time.UnixMilli(u.Ctime),
 	}, nil
+}
+
+func (ur *UserRepository) Update(ctx context.Context, u domain.User) error {
+	err := ur.dao.UpdateNonZeroFields(ctx, ur.domainToEntity(u))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ur *UserRepository) domainToEntity(user domain.User) dao.User {
+	return dao.User{
+		Id:       user.Id,
+		Email:    user.Email,
+		Password: user.Password,
+		Phone:    user.Phone,
+		Nickname: user.Nickname,
+		Birthday: user.Birthday.UnixMilli(),
+		AboutMe:  user.AboutMe,
+	}
+}
+
+func (ur *UserRepository) entityToDomain(user dao.User) domain.User {
+	return domain.User{
+		Id:       user.Id,
+		Email:    user.Email,
+		Password: user.Password,
+		Phone:    user.Phone,
+		Nickname: user.Nickname,
+		Birthday: time.UnixMilli(user.Birthday),
+		AboutMe:  user.AboutMe,
+		Ctime:    time.UnixMilli(user.Ctime),
+	}
 }

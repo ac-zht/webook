@@ -51,5 +51,5 @@ func (srv *UserService) Profile(ctx context.Context, id int64) (domain.User, err
 }
 
 func (srv *UserService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
-	return nil
+	return srv.repo.Update(ctx, user)
 }
