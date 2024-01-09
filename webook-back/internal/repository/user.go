@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/zht-account/webook/internal/domain"
+	"github.com/zht-account/webook/internal/repository/cache"
 	"github.com/zht-account/webook/internal/repository/dao"
 	"time"
 )
@@ -12,12 +13,14 @@ var ErrUserDuplicateEmail = dao.ErrUserDuplicate
 var ErrUserNotFound = errors.New("用户未找到")
 
 type UserRepository struct {
-	dao *dao.UserDAO
+	dao   *dao.UserDAO
+	cache cache.UserCache
 }
 
-func NewUserRepository(d *dao.UserDAO) *UserRepository {
+func NewUserRepository(d *dao.UserDAO, c cache.UserCache) *UserRepository {
 	return &UserRepository{
-		dao: d,
+		dao:   d,
+		cache: c,
 	}
 }
 
@@ -33,29 +36,21 @@ func (ur *UserRepository) FindByEmail(ctx context.Context, email string) (domain
 	if err != nil {
 		return domain.User{}, ErrUserNotFound
 	}
-	return domain.User{
-		Id:       u.Id,
-		Email:    u.Email,
-		Password: u.Password,
-		Ctime:    time.UnixMilli(u.Ctime),
-	}, nil
+	return ur.entityToDomain(u), nil
 }
 
 func (ur *UserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
-	u, err := ur.dao.FindById(ctx, id)
+	u, err := ur.cache.Get(ctx, id)
+	if err == nil {
+		return u, nil
+	}
+	ue, err := ur.dao.FindById(ctx, id)
 	if err != nil {
 		return domain.User{}, ErrUserNotFound
 	}
-	return domain.User{
-		Id:       u.Id,
-		Email:    u.Email,
-		Phone:    u.Phone,
-		Nickname: u.Nickname,
-		Birthday: time.UnixMilli(u.Birthday),
-		AboutMe:  u.AboutMe,
-		Password: u.Password,
-		Ctime:    time.UnixMilli(u.Ctime),
-	}, nil
+	u = ur.entityToDomain(ue)
+	_ = ur.cache.Set(ctx, u)
+	return u, nil
 }
 
 func (ur *UserRepository) Update(ctx context.Context, u domain.User) error {

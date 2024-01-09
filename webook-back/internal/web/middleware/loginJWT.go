@@ -49,7 +49,7 @@ func (*LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 		}
 		ctx.Set("user", uc)
 		if expireTime.Sub(time.Now()) < time.Second*50 {
-			uc.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
+			uc.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute * 30))
 			newToken, err := token.SignedString(web.JWTKey)
 			if err != nil {
 				log.Println(err)

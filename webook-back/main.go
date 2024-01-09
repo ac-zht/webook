@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/zht-account/webook/internal/repository"
+	"github.com/zht-account/webook/internal/repository/cache"
 	"github.com/zht-account/webook/internal/repository/dao"
 	"github.com/zht-account/webook/internal/service"
 	"github.com/zht-account/webook/internal/web"
@@ -41,10 +42,12 @@ func initWebServer() *gin.Engine {
 	//    panic(err)
 	//}
 	server.Use(sessions.Sessions("ssid", store))
+
 	//登录检测
 	//login := &middleware.LoginMiddlewareBuilder{}
 	login := &middleware.LoginJWTMiddlewareBuilder{}
 	server.Use(login.CheckLogin())
+
 	//请求限流
 	cmd := redis.NewClient(&redis.Options{
 		Addr:     "120.24.91.113:7002",
@@ -57,7 +60,12 @@ func initWebServer() *gin.Engine {
 
 func initUser(server *gin.Engine, db *gorm.DB) {
 	ud := dao.NewUserDAO(db)
-	ur := repository.NewUserRepository(ud)
+	redisUserCache := cache.NewRedisUserCache(redis.NewClient(&redis.Options{
+		Addr:     "120.24.91.113:7002",
+		Password: "uphill",
+		DB:       2,
+	}))
+	ur := repository.NewUserRepository(ud, redisUserCache)
 	us := service.NewUserService(ur)
 	c := web.NewUserHandler(us)
 	c.RegisterRoutes(server)
@@ -76,8 +84,14 @@ func initDB() *gorm.DB {
 }
 
 func main() {
+	//server := gin.Default()
+	//server.GET("/hello", func(ctx *gin.Context) {
+	//    ctx.String(http.StatusOK, "hello, world")
+	//})
+
 	db := initDB()
 	server := initWebServer()
 	initUser(server, db)
+
 	server.Run(":8080")
 }
