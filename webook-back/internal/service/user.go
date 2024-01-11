@@ -8,30 +8,38 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var ErrUserDuplicateEmail = repository.ErrUserDuplicateEmail
+var ErrUserDuplicateEmail = repository.ErrUserDuplicate
 var ErrInvalidUserOrPassword = errors.New("无效的用户或密码")
 
-type UserService struct {
-	repo *repository.UserRepository
+type UserService interface {
+	Signup(ctx context.Context, u domain.User) error
+	Login(ctx context.Context, email, password string) (domain.User, error)
+	Profile(ctx context.Context, id int64) (domain.User, error)
+	UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error
+	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
-	return &UserService{
+type userService struct {
+	repo repository.UserRepository
+}
+
+func NewUserService(repo repository.UserRepository) UserService {
+	return &userService{
 		repo: repo,
 	}
 }
 
-func (srv *UserService) Signup(ctx context.Context, u domain.User) error {
+func (svc *userService) Signup(ctx context.Context, u domain.User) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	u.Password = string(hash)
-	return srv.repo.Create(ctx, u)
+	return svc.repo.Create(ctx, u)
 }
 
-func (srv *UserService) Login(ctx context.Context, email, password string) (domain.User, error) {
-	u, err := srv.repo.FindByEmail(ctx, email)
+func (svc *userService) Login(ctx context.Context, email, password string) (domain.User, error) {
+	u, err := svc.repo.FindByEmail(ctx, email)
 	if err == repository.ErrUserNotFound {
 		return domain.User{}, ErrInvalidUserOrPassword
 	}
@@ -42,14 +50,25 @@ func (srv *UserService) Login(ctx context.Context, email, password string) (doma
 	return u, err
 }
 
-func (srv *UserService) Profile(ctx context.Context, id int64) (domain.User, error) {
-	u, err := srv.repo.FindById(ctx, id)
-	if err != nil {
-		return domain.User{}, err
-	}
-	return u, err
+func (svc *userService) Profile(ctx context.Context, id int64) (domain.User, error) {
+	return svc.repo.FindById(ctx, id)
 }
 
-func (srv *UserService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
-	return srv.repo.Update(ctx, user)
+func (svc *userService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
+	return svc.repo.Update(ctx, user)
+}
+
+func (svc *userService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
+	u, err := svc.repo.FindByPhone(ctx, phone)
+	if err != repository.ErrUserNotFound {
+		return u, err
+	}
+	//注册
+	err = svc.repo.Create(ctx, domain.User{
+		Phone: phone,
+	})
+	if err != nil && err != repository.ErrUserDuplicate {
+		return domain.User{}, err
+	}
+	return svc.repo.FindByPhone(ctx, phone)
 }

@@ -10,7 +10,15 @@ import (
 
 var ErrUserDuplicate = errors.New("用户邮箱或者手机号冲突")
 
-type UserDAO struct {
+type UserDAO interface {
+	Insert(ctx context.Context, u User) error
+	FindById(ctx context.Context, id int64) (User, error)
+	FindByEmail(ctx context.Context, email string) (User, error)
+	FindByPhone(ctx context.Context, phone string) (User, error)
+	UpdateNonZeroFields(ctx context.Context, u User) error
+}
+
+type GORMUserDAO struct {
 	db *gorm.DB
 }
 
@@ -31,13 +39,13 @@ func InitTables(db *gorm.DB) error {
 	return db.AutoMigrate(&User{})
 }
 
-func NewUserDAO(db *gorm.DB) *UserDAO {
-	return &UserDAO{
+func NewUserDAO(db *gorm.DB) UserDAO {
+	return &GORMUserDAO{
 		db: db,
 	}
 }
 
-func (ud *UserDAO) Insert(ctx context.Context, u User) error {
+func (ud *GORMUserDAO) Insert(ctx context.Context, u User) error {
 	now := time.Now().UnixMilli()
 	u.Ctime = now
 	u.Utime = now
@@ -51,16 +59,7 @@ func (ud *UserDAO) Insert(ctx context.Context, u User) error {
 	return err
 }
 
-func (ud *UserDAO) FindByEmail(ctx context.Context, email string) (User, error) {
-	var user User
-	err := ud.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
-	if err != nil {
-		return User{}, err
-	}
-	return user, nil
-}
-
-func (ud *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
+func (ud *GORMUserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	var user User
 	err := ud.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
 	if err != nil {
@@ -69,6 +68,24 @@ func (ud *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	return user, nil
 }
 
-func (ud *UserDAO) UpdateNonZeroFields(ctx context.Context, u User) error {
+func (ud *GORMUserDAO) FindByEmail(ctx context.Context, email string) (User, error) {
+	var user User
+	err := ud.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
+func (ud *GORMUserDAO) FindByPhone(ctx context.Context, phone string) (User, error) {
+	var user User
+	err := ud.db.WithContext(ctx).Where("phone = ?", phone).First(&user).Error
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
+
+func (ud *GORMUserDAO) UpdateNonZeroFields(ctx context.Context, u User) error {
 	return ud.db.Updates(&u).Error
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/zht-account/webook/internal/domain"
 	"github.com/zht-account/webook/internal/service"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -18,10 +19,12 @@ const (
 	passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
 	userIdKey            = "userId"
 	JWTKey               = "abc"
+	bizLogin             = "login"
 )
 
 type UserHandler struct {
-	srv              *service.UserService
+	svc              service.UserService
+	codeSvc          service.CodeService
 	emailRegexExp    *regexp.Regexp
 	passwordRegexExp *regexp.Regexp
 }
@@ -39,9 +42,10 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
-func NewUserHandler(srv *service.UserService) *UserHandler {
+func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
 	return &UserHandler{
-		srv:              srv,
+		svc:              svc,
+		codeSvc:          codeSvc,
 		emailRegexExp:    regexp.MustCompile(emailRegexPattern, regexp.None),
 		passwordRegexExp: regexp.MustCompile(passwordRegexPattern, regexp.None),
 	}
@@ -75,7 +79,7 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Msg: "密码格式不正确"})
 		return
 	}
-	u, err := c.srv.Login(ctx, req.Email, req.Password)
+	u, err := c.svc.Login(ctx, req.Email, req.Password)
 	if err == service.ErrInvalidUserOrPassword {
 		ctx.JSON(http.StatusOK, Result{Msg: "用户名或密码错误"})
 		return
@@ -103,6 +107,59 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 	ctx.Header("x-jwt-token", tokenStr)
+	ctx.JSON(http.StatusOK, Result{Msg: "登录成功"})
+}
+
+func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
+	type Req struct {
+		Phone string `json:"phone"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	if req.Phone == "" {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "请输入手机号码"})
+	}
+	err := c.codeSvc.Send(ctx, bizLogin, req.Phone)
+	switch err {
+	case nil:
+		ctx.JSON(http.StatusOK, Result{Msg: "发送成功"})
+	case service.ErrCodeSendTooMany:
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "短信发送太频繁，请稍后再试"})
+	default:
+		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
+		return
+	}
+}
+
+func (c *UserHandler) LoginSMS(ctx *gin.Context) {
+	type Req struct {
+		Phone string `json:"phone"`
+		Code  string `json:"code"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	ok, err := c.codeSvc.Verify(ctx, bizLogin, req.Phone, req.Code)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统异常"})
+		zap.L().Error("用户手机号码登录失败", zap.Error(err))
+		return
+	}
+	if !ok {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "验证码错误"})
+		return
+	}
+	u, err := c.svc.FindOrCreate(ctx, req.Phone)
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "系统错误"})
+		return
+	}
+	//======设置会话标识=========
+
+	//=========================
 	ctx.JSON(http.StatusOK, Result{Msg: "登录成功"})
 }
 
@@ -139,7 +196,7 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	err = c.srv.Signup(ctx, domain.User{
+	err = c.svc.Signup(ctx, domain.User{
 		Email:    req.Email,
 		Password: req.Password,
 		Ctime:    time.Now(),
@@ -175,7 +232,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 	}
 
 	uc := ctx.MustGet("user").(UserClaims)
-	err = c.srv.UpdateNonSensitiveInfo(ctx, domain.User{
+	err = c.svc.UpdateNonSensitiveInfo(ctx, domain.User{
 		Id:       uc.Id,
 		Nickname: req.Nickname,
 		AboutMe:  req.AboutMe,
@@ -197,7 +254,7 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 		AboutMe  string
 	}
 	uc := ctx.MustGet("user").(UserClaims)
-	u, err := c.srv.Profile(ctx, uc.Id)
+	u, err := c.svc.Profile(ctx, uc.Id)
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误")
 		return
@@ -217,4 +274,6 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.POST("/login", c.LoginJWT)
 	ug.POST("/edit", c.Edit)
 	ug.GET("/profile", c.ProfileJWT)
+	ug.GET("/login_sms/code/send", c.SendSMSLoginCode)
+	ug.GET("/login_sms", c.LoginSMS)
 }
