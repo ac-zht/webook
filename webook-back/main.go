@@ -6,15 +6,20 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
+	sms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111"
 	"github.com/zht-account/webook/internal/repository"
 	"github.com/zht-account/webook/internal/repository/cache"
 	"github.com/zht-account/webook/internal/repository/dao"
 	"github.com/zht-account/webook/internal/service"
+	"github.com/zht-account/webook/internal/service/sms/tencent"
 	"github.com/zht-account/webook/internal/web"
 	"github.com/zht-account/webook/internal/web/middleware"
 	"github.com/zht-account/webook/pkg/ginx/middleware/ratelimit"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"os"
 	"strings"
 	"time"
 )
@@ -65,9 +70,22 @@ func initUser(server *gin.Engine, db *gorm.DB) {
 		Password: "uphill",
 		DB:       2,
 	}))
-	ur := repository.NewUserRepository(ud, redisUserCache)
+	ur := repository.NewCachedUserRepository(ud, redisUserCache)
 	us := service.NewUserService(ur)
-	c := web.NewUserHandler(us)
+
+	redisCodeCache := cache.NewRedisCodeCache(redis.NewClient(&redis.Options{
+		Addr:     "120.24.91.113:7002",
+		Password: "uphill",
+		DB:       2,
+	}))
+	codeRepo := repository.NewCacheCodeRepository(redisCodeCache)
+	credential := common.NewCredential(
+		os.Getenv("TENCENTCLOUD_SECRET_ID"),
+		os.Getenv("TENCENTCLOUD_SECRET_KEY"),
+	)
+	smsClient, _ := sms.NewClient(credential, "ap-guangzhou", profile.NewClientProfile())
+	codeSvc := service.NewSMSCodeService(tencent.NewService(smsClient, "", ""), codeRepo)
+	c := web.NewUserHandler(us, codeSvc)
 	c.RegisterRoutes(server)
 }
 

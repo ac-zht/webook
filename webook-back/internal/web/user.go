@@ -157,9 +157,19 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "系统错误"})
 		return
 	}
-	//======设置会话标识=========
-
-	//=========================
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
+		Id:        u.Id,
+		UserAgent: ctx.GetHeader("User-Agent"),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 10)),
+		},
+	})
+	tokenStr, err := token.SignedString([]byte(JWTKey))
+	if err != nil {
+		ctx.JSON(http.StatusOK, Result{Msg: "系统异常"})
+		return
+	}
+	ctx.Header("x-jwt-token", tokenStr)
 	ctx.JSON(http.StatusOK, Result{Msg: "登录成功"})
 }
 

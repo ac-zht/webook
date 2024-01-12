@@ -15,15 +15,7 @@ type Service struct {
 	signName *string
 }
 
-func NewService(c *sms.Client, appId string, signName string) *Service {
-	return &Service{
-		client:   c,
-		appId:    ekit.ToPtr[string](appId),
-		signName: ekit.ToPtr[string](signName),
-	}
-}
-
-func (s Service) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
+func (s *Service) Send(ctx context.Context, tplId string, args []string, numbers ...string) error {
 	req := sms.NewSendSmsRequest()
 	req.SmsSdkAppId = s.appId
 	req.SignName = s.signName
@@ -44,4 +36,12 @@ func (s Service) Send(ctx context.Context, tplId string, args []string, numbers 
 		}
 	}
 	return nil
+}
+
+func NewService(c *sms.Client, appId string, signName string) *Service {
+	return &Service{
+		client:   c,
+		appId:    ekit.ToPtr[string](appId),
+		signName: ekit.ToPtr[string](signName),
+	}
 }
