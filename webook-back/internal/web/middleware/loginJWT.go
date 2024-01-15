@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/ecodeclub/ekit/set"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/zht-account/webook/internal/web"
@@ -11,7 +12,12 @@ import (
 )
 
 type LoginJWTMiddlewareBuilder struct {
+	publicPaths set.Set[string]
 }
+
+//func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
+//
+//}
 
 func (*LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
