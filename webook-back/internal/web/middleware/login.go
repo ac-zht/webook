@@ -13,7 +13,7 @@ type LoginMiddlewareBuilder struct {
 
 func NewLoginMiddlewareBuilder() *LoginMiddlewareBuilder {
 	s := set.NewMapSet[string](3)
-	s.Add("/users/singup")
+	s.Add("/users/signup")
 	s.Add("/users/login_sms/code/send")
 	s.Add("/users/login_sms")
 	s.Add("/users/login")
@@ -22,10 +22,9 @@ func NewLoginMiddlewareBuilder() *LoginMiddlewareBuilder {
 	}
 }
 
-func (*LoginMiddlewareBuilder) Build() gin.HandlerFunc {
+func (m *LoginMiddlewareBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if ctx.Request.URL.Path == "/users/signup" ||
-			ctx.Request.URL.Path == "/users/login" {
+		if m.publicPaths.Exist(ctx.Request.URL.Path) {
 			return
 		}
 		sess := sessions.Default(ctx)

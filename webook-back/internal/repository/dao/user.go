@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
@@ -23,13 +24,13 @@ type GORMUserDAO struct {
 }
 
 type User struct {
-	Id       int64  `gorm:"primaryKey,autoIncrement"`
-	Email    string `gorm:"unique"`
+	Id       int64          `gorm:"primaryKey,autoIncrement"`
+	Email    sql.NullString `gorm:"unique"`
 	Password string
-	Phone    string `gorm:"unique"`
-	Nickname string
-	Birthday int64
-	AboutMe  string `gorm:"column:about_me;type:varchar(1024)"`
+	Phone    sql.NullString `gorm:"unique"`
+	Nickname sql.NullString
+	Birthday sql.NullInt64
+	AboutMe  sql.NullString `gorm:"column:about_me;type:varchar(1024)"`
 
 	Ctime int64
 	Utime int64

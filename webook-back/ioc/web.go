@@ -42,7 +42,7 @@ func corsHdl() gin.HandlerFunc {
 }
 
 func loginHdl() gin.HandlerFunc {
-	return middleware.NewLoginMiddlewareBuilder().Build()
+	return middleware.NewLoginJWTMiddlewareBuilder().Build()
 }
 
 func rateLimitHdl(redisClient redis.Cmdable) gin.HandlerFunc {

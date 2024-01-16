@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"github.com/zht-account/webook/internal/domain"
 	"github.com/zht-account/webook/internal/repository/cache"
@@ -33,10 +34,8 @@ func NewCachedUserRepository(d dao.UserDAO, c cache.UserCache) UserRepository {
 }
 
 func (ur *CachedUserRepository) Create(ctx context.Context, u domain.User) error {
-	return ur.dao.Insert(ctx, dao.User{
-		Email:    u.Email,
-		Password: u.Password,
-	})
+	du := ur.domainToEntity(u)
+	return ur.dao.Insert(ctx, du)
 }
 
 func (ur *CachedUserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
@@ -79,25 +78,44 @@ func (ur *CachedUserRepository) Update(ctx context.Context, u domain.User) error
 
 func (ur *CachedUserRepository) domainToEntity(user domain.User) dao.User {
 	return dao.User{
-		Id:       user.Id,
-		Email:    user.Email,
+		Id: user.Id,
+		Email: sql.NullString{
+			String: user.Email,
+			Valid:  user.Email != "",
+		},
 		Password: user.Password,
-		Phone:    user.Phone,
-		Nickname: user.Nickname,
-		Birthday: user.Birthday.UnixMilli(),
-		AboutMe:  user.AboutMe,
+		Phone: sql.NullString{
+			String: user.Phone,
+			Valid:  user.Phone != "",
+		},
+		Nickname: sql.NullString{
+			String: user.Nickname,
+			Valid:  user.Nickname != "",
+		},
+		Birthday: sql.NullInt64{
+			Int64: user.Birthday.UnixMilli(),
+			Valid: !user.Birthday.IsZero(),
+		},
+		AboutMe: sql.NullString{
+			String: user.AboutMe,
+			Valid:  user.AboutMe != "",
+		},
 	}
 }
 
 func (ur *CachedUserRepository) entityToDomain(user dao.User) domain.User {
+	var birthday time.Time
+	if user.Birthday.Valid {
+		birthday = time.UnixMilli(user.Birthday.Int64)
+	}
 	return domain.User{
 		Id:       user.Id,
-		Email:    user.Email,
+		Email:    user.Email.String,
 		Password: user.Password,
-		Phone:    user.Phone,
-		Nickname: user.Nickname,
-		Birthday: time.UnixMilli(user.Birthday),
-		AboutMe:  user.AboutMe,
+		Phone:    user.Phone.String,
+		Nickname: user.Nickname.String,
+		Birthday: birthday,
+		AboutMe:  user.AboutMe.String,
 		Ctime:    time.UnixMilli(user.Ctime),
 	}
 }

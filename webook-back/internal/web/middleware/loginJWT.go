@@ -15,14 +15,20 @@ type LoginJWTMiddlewareBuilder struct {
 	publicPaths set.Set[string]
 }
 
-//func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
-//
-//}
+func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
+	s := set.NewMapSet[string](3)
+	s.Add("/users/signup")
+	s.Add("/users/login_sms/code/send")
+	s.Add("/users/login_sms")
+	s.Add("/users/login")
+	return &LoginJWTMiddlewareBuilder{
+		publicPaths: s,
+	}
+}
 
-func (*LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
+func (m *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if ctx.Request.URL.Path == "/users/signup" ||
-			ctx.Request.URL.Path == "/users/login" {
+		if m.publicPaths.Exist(ctx.Request.URL.Path) {
 			return
 		}
 		authCode := ctx.GetHeader("Authorization")

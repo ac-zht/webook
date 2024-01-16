@@ -112,7 +112,7 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 
 func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 	type Req struct {
-		Phone string `json:"phone"`
+		Phone string `form:"phone" json:"phone"`
 	}
 	var req Req
 	if err := ctx.Bind(&req); err != nil {
@@ -120,6 +120,7 @@ func (c *UserHandler) SendSMSLoginCode(ctx *gin.Context) {
 	}
 	if req.Phone == "" {
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "请输入手机号码"})
+		return
 	}
 	err := c.codeSvc.Send(ctx, bizLogin, req.Phone)
 	switch err {
@@ -284,6 +285,6 @@ func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.POST("/login", c.LoginJWT)
 	ug.POST("/edit", c.Edit)
 	ug.GET("/profile", c.ProfileJWT)
-	ug.GET("/login_sms/code/send", c.SendSMSLoginCode)
-	ug.GET("/login_sms", c.LoginSMS)
+	ug.POST("/login_sms/code/send", c.SendSMSLoginCode)
+	ug.POST("/login_sms", c.LoginSMS)
 }
