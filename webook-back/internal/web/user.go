@@ -14,8 +14,7 @@ import (
 var _ handler = &UserHandler{}
 
 const (
-	emailRegexPattern = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
-	// 和上面比起来，用 ` 看起来就比较清爽
+	emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
 	passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
 	userIdKey            = "userId"
 	JWTKey               = "abc"
@@ -76,7 +75,7 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 	if !isPassword {
-		ctx.JSON(http.StatusOK, Result{Msg: "密码格式不正确"})
+		ctx.JSON(http.StatusOK, Result{Msg: "密码必须包含数字、特殊字符，并且长度不能小于 8 位"})
 		return
 	}
 	u, err := c.svc.Login(ctx, req.Email, req.Password)
@@ -84,16 +83,6 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Msg: "用户名或密码错误"})
 		return
 	}
-	//sess := sessions.Default(ctx)
-	//sess.Set(userIdKey, u.Id)
-	//sess.Options(sessions.Options{
-	//    MaxAge: 60,
-	//})
-	//err = sess.Save()
-	//if err != nil {
-	//    ctx.JSON(http.StatusOK, Result{Msg: "服务器异常"})
-	//    return
-	//}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
 		Id:        u.Id,
 		UserAgent: ctx.GetHeader("User-Agent"),
@@ -199,7 +188,7 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 		return
 	}
 	if !isPassword {
-		ctx.String(http.StatusOK, "密码格式不正确")
+		ctx.String(http.StatusOK, "密码必须包含数字、特殊字符，并且长度不能小于 8 位")
 		return
 	}
 	if req.Password != req.ConfirmPassword {
@@ -212,8 +201,12 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 		Password: req.Password,
 		Ctime:    time.Now(),
 	})
+	if err == service.ErrUserDuplicateEmail {
+		ctx.String(http.StatusOK, "邮箱冲突")
+		return
+	}
 	if err != nil {
-		ctx.String(http.StatusOK, "注册失败")
+		ctx.String(http.StatusOK, "系统异常")
 		return
 	}
 	ctx.String(http.StatusOK, "注册成功")
@@ -221,12 +214,13 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 
 func (c *UserHandler) Edit(ctx *gin.Context) {
 	type Request struct {
-		Nickname string `json:"nickname"`
-		Birthday string `json:"birthday"`
-		AboutMe  string `json:"aboutMe"`
+		Nickname string `form:"nickname" json:"nickname"`
+		Birthday string `form:"birthday" json:"birthday"`
+		AboutMe  string `form:"aboutMe" json:"aboutMe"`
 	}
 	var req Request
 	if err := ctx.Bind(&req); err != nil {
+		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "参数错误"})
 		return
 	}
 	if req.Nickname == "" {
@@ -241,7 +235,6 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Code: 4, Msg: "日期格式错误"})
 		return
 	}
-
 	uc := ctx.MustGet("user").(UserClaims)
 	err = c.svc.UpdateNonSensitiveInfo(ctx, domain.User{
 		Id:       uc.Id,
@@ -253,7 +246,7 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{Code: 5, Msg: "系统错误"})
 		return
 	}
-	ctx.JSON(http.StatusOK, Result{Msg: "OK"})
+	ctx.JSON(http.StatusOK, Result{Msg: "成功"})
 }
 
 func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
