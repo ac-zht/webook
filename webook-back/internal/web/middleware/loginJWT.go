@@ -4,15 +4,14 @@ import (
 	"github.com/ecodeclub/ekit/set"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/zht-account/webook/internal/web"
-	"log"
+	ijwt "github.com/zht-account/webook/internal/web/jwt"
 	"net/http"
-	"strings"
 	"time"
 )
 
 type LoginJWTMiddlewareBuilder struct {
 	publicPaths set.Set[string]
+	ijwt.Handler
 }
 
 func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
@@ -31,21 +30,19 @@ func (m *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 		if m.publicPaths.Exist(ctx.Request.URL.Path) {
 			return
 		}
-		authCode := ctx.GetHeader("Authorization")
-		if authCode == "" {
+		tokenStr := m.ExtractTokenString(ctx)
+		if tokenStr == "" {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		authSegments := strings.SplitN(authCode, " ", 2)
-		if len(authSegments) != 2 {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		tokenStr := authSegments[1]
-		uc := web.UserClaims{}
+		uc := ijwt.UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, &uc, func(token *jwt.Token) (interface{}, error) {
-			return web.JWTKey, nil
+			return ijwt.AccessTokenKey, nil
 		})
+		if err != nil || !token.Valid {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 		if ctx.GetHeader("User-Agent") != uc.UserAgent {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
@@ -59,15 +56,10 @@ func (m *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		ctx.Set("user", uc)
-		if expireTime.Sub(time.Now()) < time.Second*50 {
-			uc.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute * 30))
-			newToken, err := token.SignedString(web.JWTKey)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			ctx.Header("x-jwt-token", newToken)
+		if m.CheckSession(ctx, uc.Ssid) != nil {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
 		}
+		ctx.Set("user", uc)
 	}
 }

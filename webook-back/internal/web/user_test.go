@@ -9,6 +9,7 @@ import (
 	"github.com/zht-account/webook/internal/domain"
 	"github.com/zht-account/webook/internal/service"
 	svcmocks "github.com/zht-account/webook/internal/service/mocks"
+	ijwt "github.com/zht-account/webook/internal/web/jwt"
 	"go.uber.org/mock/gomock"
 	"net/http"
 	"net/http/httptest"
@@ -37,7 +38,7 @@ func TestEmailPattern(t *testing.T) {
 			match: false,
 		},
 	}
-	hdl := NewUserHandler(nil, nil)
+	hdl := NewUserHandler(nil, nil, nil)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			match, err := hdl.emailRegexExp.MatchString(tc.email)
@@ -79,7 +80,7 @@ func TestPasswordPattern(t *testing.T) {
 			match:    false,
 		},
 	}
-	hdl := NewUserHandler(nil, nil)
+	hdl := NewUserHandler(nil, nil, nil)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			match, err := hdl.passwordRegexExp.MatchString(tc.password)
@@ -93,7 +94,7 @@ func TestUserHandler_SignUp(t *testing.T) {
 	const signupUrl = "/users/signup"
 	testCases := []struct {
 		name       string
-		mock       func(ctrl *gomock.Controller) (service.UserService, service.CodeService)
+		mock       func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler)
 		reqBuilder func(t *testing.T) *http.Request
 
 		wantCode int
@@ -101,11 +102,11 @@ func TestUserHandler_SignUp(t *testing.T) {
 	}{
 		{
 			name: "注册成功",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 				userSvc := svcmocks.NewMockUserService(ctrl)
 				userSvc.EXPECT().Signup(gomock.Any(), gomock.Any()).Return(nil)
 				codeSvc := svcmocks.NewMockCodeService(ctrl)
-				return userSvc, codeSvc
+				return userSvc, codeSvc, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123","confirmPassword":"hello@world123"}`))
@@ -121,8 +122,8 @@ func TestUserHandler_SignUp(t *testing.T) {
 		},
 		{
 			name: "参数错误",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
-				return nil, nil
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
+				return nil, nil, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com",}`))
@@ -137,8 +138,8 @@ func TestUserHandler_SignUp(t *testing.T) {
 		},
 		{
 			name: "邮箱格式错误",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
-				return nil, nil
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
+				return nil, nil, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123"}`))
@@ -154,8 +155,8 @@ func TestUserHandler_SignUp(t *testing.T) {
 		},
 		{
 			name: "密码格式错误",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
-				return nil, nil
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
+				return nil, nil, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"123"}`))
@@ -171,8 +172,8 @@ func TestUserHandler_SignUp(t *testing.T) {
 		},
 		{
 			name: "两次输入的密码不相同",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
-				return nil, nil
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
+				return nil, nil, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123","confirmPassword":"hello@world1234"}`))
@@ -188,11 +189,11 @@ func TestUserHandler_SignUp(t *testing.T) {
 		},
 		{
 			name: "邮箱冲突",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 				userSvc := svcmocks.NewMockUserService(ctrl)
 				userSvc.EXPECT().Signup(gomock.Any(), gomock.Any()).Return(service.ErrUserDuplicateEmail)
 				codeSvc := svcmocks.NewMockCodeService(ctrl)
-				return userSvc, codeSvc
+				return userSvc, codeSvc, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123","confirmPassword":"hello@world123"}`))
@@ -208,11 +209,11 @@ func TestUserHandler_SignUp(t *testing.T) {
 		},
 		{
 			name: "系统异常",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 				userSvc := svcmocks.NewMockUserService(ctrl)
 				userSvc.EXPECT().Signup(gomock.Any(), gomock.Any()).Return(errors.New("this is a error"))
 				codeSvc := svcmocks.NewMockCodeService(ctrl)
-				return userSvc, codeSvc
+				return userSvc, codeSvc, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123","confirmPassword":"hello@world123"}`))
@@ -231,8 +232,8 @@ func TestUserHandler_SignUp(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			userSvc, codeSvc := tc.mock(ctrl)
-			hdl := NewUserHandler(userSvc, codeSvc)
+			userSvc, codeSvc, jwtHdl := tc.mock(ctrl)
+			hdl := NewUserHandler(userSvc, codeSvc, jwtHdl)
 			gin.SetMode(gin.ReleaseMode)
 			server := gin.Default()
 			hdl.RegisterRoutes(server)
@@ -250,7 +251,7 @@ func TestUserHandler_LoginJWT(t *testing.T) {
 	const loginUrl = "/users/login"
 	testCases := []struct {
 		name       string
-		mock       func(ctrl *gomock.Controller) (service.UserService, service.CodeService)
+		mock       func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler)
 		reqBuilder func(t *testing.T) *http.Request
 
 		wantCode int
@@ -258,11 +259,11 @@ func TestUserHandler_LoginJWT(t *testing.T) {
 	}{
 		{
 			name: "登录成功",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 				userSvc := svcmocks.NewMockUserService(ctrl)
 				userSvc.EXPECT().Login(gomock.Any(), gomock.Any(), gomock.Any()).Return(domain.User{}, nil)
 				codeSvc := svcmocks.NewMockCodeService(ctrl)
-				return userSvc, codeSvc
+				return userSvc, codeSvc, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123"}`))
@@ -278,11 +279,11 @@ func TestUserHandler_LoginJWT(t *testing.T) {
 		},
 		{
 			name: "用户名或密码错误",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 				userSvc := svcmocks.NewMockUserService(ctrl)
 				userSvc.EXPECT().Login(gomock.Any(), gomock.Any(), gomock.Any()).Return(domain.User{}, service.ErrInvalidUserOrPassword)
 				codeSvc := svcmocks.NewMockCodeService(ctrl)
-				return userSvc, codeSvc
+				return userSvc, codeSvc, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123"}`))
@@ -301,8 +302,8 @@ func TestUserHandler_LoginJWT(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			userSvc, codeSvc := tc.mock(ctrl)
-			hdl := NewUserHandler(userSvc, codeSvc)
+			userSvc, codeSvc, jwtHdl := tc.mock(ctrl)
+			hdl := NewUserHandler(userSvc, codeSvc, jwtHdl)
 			gin.SetMode(gin.ReleaseMode)
 			server := gin.Default()
 			hdl.RegisterRoutes(server)
@@ -320,7 +321,7 @@ func TestUserHandler_Edit(t *testing.T) {
 	const editUrl = "/users/edit"
 	testCases := []struct {
 		name       string
-		mock       func(ctrl *gomock.Controller) (service.UserService, service.CodeService)
+		mock       func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler)
 		reqBuilder func(t *testing.T) *http.Request
 
 		wantCode int
@@ -328,11 +329,11 @@ func TestUserHandler_Edit(t *testing.T) {
 	}{
 		{
 			name: "编辑成功",
-			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 				userSvc := svcmocks.NewMockUserService(ctrl)
 				userSvc.EXPECT().UpdateNonSensitiveInfo(gomock.Any(), gomock.Any()).Return(nil)
 				codeSvc := svcmocks.NewMockCodeService(ctrl)
-				return userSvc, codeSvc
+				return userSvc, codeSvc, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"nickname":"user","birthday":"2000-04-12","aboutMe":"info"}`))
@@ -351,8 +352,8 @@ func TestUserHandler_Edit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			userSvc, codeSvc := tc.mock(ctrl)
-			hdl := NewUserHandler(userSvc, codeSvc)
+			userSvc, codeSvc, jwtHdl := tc.mock(ctrl)
+			hdl := NewUserHandler(userSvc, codeSvc, jwtHdl)
 			gin.SetMode(gin.ReleaseMode)
 			server := gin.Default()
 			hdl.RegisterRoutes(server)

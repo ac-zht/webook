@@ -13,6 +13,7 @@ import (
 	"github.com/zht-account/webook/internal/repository/dao"
 	"github.com/zht-account/webook/internal/service"
 	"github.com/zht-account/webook/internal/web"
+	"github.com/zht-account/webook/internal/web/jwt"
 	"github.com/zht-account/webook/ioc"
 )
 
@@ -30,7 +31,8 @@ func InitWebServer() *gin.Engine {
 	codeCache := cache.NewRedisCodeCache(cmdable)
 	codeRepository := repository.NewCacheCodeRepository(codeCache)
 	codeService := service.NewSMSCodeService(smsService, codeRepository)
-	userHandler := web.NewUserHandler(userService, codeService)
+	handler := jwt.NewRedisHandler(cmdable)
+	userHandler := web.NewUserHandler(userService, codeService, handler)
 	engine := ioc.InitGin(v, userHandler)
 	return engine
 }
