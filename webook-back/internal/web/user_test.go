@@ -10,6 +10,7 @@ import (
 	"github.com/zht-account/webook/internal/service"
 	svcmocks "github.com/zht-account/webook/internal/service/mocks"
 	ijwt "github.com/zht-account/webook/internal/web/jwt"
+	jwtmocks "github.com/zht-account/webook/internal/web/jwt/mocks"
 	"go.uber.org/mock/gomock"
 	"net/http"
 	"net/http/httptest"
@@ -263,7 +264,9 @@ func TestUserHandler_LoginJWT(t *testing.T) {
 				userSvc := svcmocks.NewMockUserService(ctrl)
 				userSvc.EXPECT().Login(gomock.Any(), gomock.Any(), gomock.Any()).Return(domain.User{}, nil)
 				codeSvc := svcmocks.NewMockCodeService(ctrl)
-				return userSvc, codeSvc, nil
+				jwtHdl := jwtmocks.NewMockHandler(ctrl)
+				jwtHdl.EXPECT().SetLoginToken(gomock.Any(), gomock.Any()).Return(nil)
+				return userSvc, codeSvc, jwtHdl
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
 				body := bytes.NewBuffer([]byte(`{"email":"123@qq.com","password":"hello@world123"}`))
@@ -354,13 +357,16 @@ func TestUserHandler_Edit(t *testing.T) {
 			defer ctrl.Finish()
 			userSvc, codeSvc, jwtHdl := tc.mock(ctrl)
 			hdl := NewUserHandler(userSvc, codeSvc, jwtHdl)
-			gin.SetMode(gin.ReleaseMode)
+			gin.SetMode(gin.TestMode)
 			server := gin.Default()
 			hdl.RegisterRoutes(server)
 			req := tc.reqBuilder(t)
 			recorder := httptest.NewRecorder()
-			server.ServeHTTP(recorder, req)
-
+			ctx, _ := gin.CreateTestContext(recorder)
+			ctx.Set("user", ijwt.UserClaims{})
+			ctx.Request = req
+			server.HandleContext(ctx)
+			//server.ServeHTTP(recorder, req)
 			assert.Equal(t, tc.wantCode, recorder.Code)
 			assert.Equal(t, tc.wantBody, recorder.Body.String())
 		})
