@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"github.com/zht-account/webook/internal/domain"
@@ -205,7 +204,6 @@ func (c *UserHandler) Edit(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, ginx.Result{Code: 4, Msg: "日期格式错误"})
 		return
 	}
-	fmt.Println(ctx)
 	uc := ctx.MustGet("user").(ijwt.UserClaims)
 	err = c.svc.UpdateNonSensitiveInfo(ctx, domain.User{
 		Id:       uc.Id,

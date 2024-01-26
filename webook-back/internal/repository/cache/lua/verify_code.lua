@@ -8,7 +8,7 @@ local cntKey = key .. ":cnt"
 local expectedVal = ARGV[1]
 local cnt = tonumber(redis.call("get", cntKey))
 
-if cnt <= 0 then
+if cnt == nil or cnt <= 0 then
     return -1
 end
 local val = redis.call("get", key)

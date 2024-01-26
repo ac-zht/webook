@@ -9,7 +9,7 @@ local val = ARGV[1]
 -- 验证码有效时间五分钟，300秒
 local ttl = tonumber(redis.call("ttl", key))
 
-if ttl == -1 then
+if ttl == nil or ttl == -1 then
     return -2
 elseif ttl == -2 or ttl < 240 then
     redis.call("set", key, val)

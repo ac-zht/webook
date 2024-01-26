@@ -362,11 +362,10 @@ func TestUserHandler_Edit(t *testing.T) {
 			hdl.RegisterRoutes(server)
 			req := tc.reqBuilder(t)
 			recorder := httptest.NewRecorder()
-			ctx, _ := gin.CreateTestContext(recorder)
-			ctx.Set("user", ijwt.UserClaims{})
-			ctx.Request = req
-			server.HandleContext(ctx)
-			//server.ServeHTTP(recorder, req)
+			//ctx, _ := gin.CreateTestContext(recorder)
+			//ctx.Set("user", 1)
+			//ctx.Request = req
+			server.ServeHTTP(recorder, req)
 			assert.Equal(t, tc.wantCode, recorder.Code)
 			assert.Equal(t, tc.wantBody, recorder.Body.String())
 		})
