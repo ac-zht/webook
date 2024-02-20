@@ -1,0 +1,7 @@
+db:
+  dsn: "root:18627502290@tcp(localhost:3306)/test"
+
+redis:
+  addr: "120.24.91.113:7002"
+  password: "uphill"
+  db: 2

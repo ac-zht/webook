@@ -1,11 +1,14 @@
 package ioc
 
-import "github.com/redis/go-redis/v9"
+import (
+	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
+)
 
 func InitRedis() redis.Cmdable {
 	return redis.NewClient(&redis.Options{
-		Addr:     "120.24.91.113:7002",
-		Password: "uphill",
-		DB:       2,
+		Addr:     viper.GetString("redis.addr"),
+		Password: viper.GetString("redis.password"),
+		DB:       viper.GetInt("redis.db"),
 	})
 }
