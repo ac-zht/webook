@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/zht-account/webook/internal/domain"
 	"github.com/zht-account/webook/internal/repository"
+	"github.com/zht-account/webook/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,12 +21,14 @@ type UserService interface {
 }
 
 type userService struct {
-	repo repository.UserRepository
+	repo   repository.UserRepository
+	logger logger.Logger
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
+func NewUserService(repo repository.UserRepository, l logger.Logger) UserService {
 	return &userService{
-		repo: repo,
+		repo:   repo,
+		logger: l,
 	}
 }
 
@@ -41,6 +44,7 @@ func (svc *userService) Signup(ctx context.Context, u domain.User) error {
 func (svc *userService) Login(ctx context.Context, email, password string) (domain.User, error) {
 	u, err := svc.repo.FindByEmail(ctx, email)
 	if err == repository.ErrUserNotFound {
+		svc.logger.Warn("登录失败,该用户不存在", logger.String("email", email))
 		return domain.User{}, ErrInvalidUserOrPassword
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))

@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
 	"time"
 )
 
 func main() {
-	initViper()
+	initViperRemote()
 	server := InitWebServer()
 	server.Run(":8080")
 }
