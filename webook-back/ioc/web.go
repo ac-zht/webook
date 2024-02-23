@@ -6,12 +6,15 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/zht-account/webook/internal/web"
 	"github.com/zht-account/webook/internal/web/middleware"
+	"github.com/zht-account/webook/pkg/ginx"
 	"github.com/zht-account/webook/pkg/ginx/middleware/ratelimit"
+	"github.com/zht-account/webook/pkg/logger"
 	"strings"
 	"time"
 )
 
-func InitGin(mids []gin.HandlerFunc, hdl *web.UserHandler) *gin.Engine {
+func InitGin(mids []gin.HandlerFunc, hdl *web.UserHandler, l logger.Logger) *gin.Engine {
+	ginx.SetLogger(l)
 	server := gin.Default()
 	server.Use(mids...)
 	hdl.RegisterRoutes(server)

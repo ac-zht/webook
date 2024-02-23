@@ -4,6 +4,7 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
 	"github.com/zht-account/webook/internal/domain"
+	"github.com/zht-account/webook/internal/errs"
 	"github.com/zht-account/webook/internal/service"
 	ijwt "github.com/zht-account/webook/internal/web/jwt"
 	"github.com/zht-account/webook/pkg/ginx"
@@ -133,37 +134,44 @@ func (c *UserHandler) LoginSMS(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, ginx.Result{Msg: "登录成功"})
 }
 
-func (c *UserHandler) SignUp(ctx *gin.Context) {
-	type SingUpReq struct {
-		Email           string `form:"email" json:"email"`
-		Password        string `form:"password" json:"password"`
-		ConfirmPassword string `form:"confirmPassword" json:"confirmPassword"`
-	}
-	var req SingUpReq
-	if err := ctx.Bind(&req); err != nil {
-		return
-	}
+type SingUpReq struct {
+	Email           string `form:"email" json:"email"`
+	Password        string `form:"password" json:"password"`
+	ConfirmPassword string `form:"confirmPassword" json:"confirmPassword"`
+}
+
+func (c *UserHandler) SignUp(ctx *gin.Context, req SingUpReq) (ginx.Result, error) {
 	isEmail, err := c.emailRegexExp.MatchString(req.Email)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
-		return
+		return ginx.Result{
+			Code: errs.UserInternalServerError,
+			Msg:  "系统错误",
+		}, err
 	}
 	if !isEmail {
-		ctx.String(http.StatusOK, "邮箱不正确")
-		return
+		return ginx.Result{
+			Code: errs.UserInvalidInput,
+			Msg:  "邮箱输入错误",
+		}, nil
+	}
+	if req.Password != req.ConfirmPassword {
+		return ginx.Result{
+			Code: errs.UserInvalidInput,
+			Msg:  "两次输入的密码不相同",
+		}, nil
 	}
 	isPassword, err := c.passwordRegexExp.MatchString(req.Password)
 	if err != nil {
-		ctx.String(http.StatusOK, "系统错误")
-		return
+		return ginx.Result{
+			Code: errs.UserInternalServerError,
+			Msg:  "系统错误",
+		}, err
 	}
 	if !isPassword {
-		ctx.String(http.StatusOK, "密码必须包含数字、特殊字符，并且长度不能小于 8 位")
-		return
-	}
-	if req.Password != req.ConfirmPassword {
-		ctx.String(http.StatusOK, "两次输入的密码不相同")
-		return
+		return ginx.Result{
+			Code: errs.UserInvalidInput,
+			Msg:  "密码必须包含数字、特殊字符，并且长度不能小于 8 位",
+		}, nil
 	}
 	err = c.svc.Signup(ctx, domain.User{
 		Email:    req.Email,
@@ -171,14 +179,21 @@ func (c *UserHandler) SignUp(ctx *gin.Context) {
 		Ctime:    time.Now(),
 	})
 	if err == service.ErrUserDuplicateEmail {
-		ctx.String(http.StatusOK, "邮箱冲突")
-		return
+		return ginx.Result{
+			Code: errs.UserDuplicateEmail,
+			Msg:  "邮箱冲突",
+		}, err
 	}
 	if err != nil {
 		ctx.String(http.StatusOK, "系统异常")
-		return
+		return ginx.Result{
+			Code: errs.UserInternalServerError,
+			Msg:  "系统异常",
+		}, err
 	}
-	ctx.String(http.StatusOK, "注册成功")
+	return ginx.Result{
+		Msg: "OK",
+	}, nil
 }
 
 func (c *UserHandler) Edit(ctx *gin.Context) {
@@ -243,7 +258,7 @@ func (c *UserHandler) ProfileJWT(ctx *gin.Context) {
 
 func (c *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/users")
-	ug.POST("/signup", c.SignUp)
+	ug.POST("/signup", ginx.WrapReq[SingUpReq](c.SignUp))
 	ug.POST("/login", c.LoginJWT)
 	ug.POST("/edit", c.Edit)
 	ug.GET("/profile", c.ProfileJWT)

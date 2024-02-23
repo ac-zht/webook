@@ -10,6 +10,7 @@ import (
 	"github.com/zht-account/webook/internal/repository/dao"
 	"github.com/zht-account/webook/internal/service"
 	"github.com/zht-account/webook/internal/web"
+	"github.com/zht-account/webook/internal/web/jwt"
 	"github.com/zht-account/webook/ioc"
 )
 
