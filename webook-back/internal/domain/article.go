@@ -12,6 +12,14 @@ type Article struct {
 	Utime   time.Time
 }
 
+func (a Article) Abstract() string {
+	cs := []rune(a.Content)
+	if len(cs) < 100 {
+		return a.Content
+	}
+	return string(cs[:100])
+}
+
 type Author struct {
 	Id   int64
 	Name string

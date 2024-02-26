@@ -9,9 +9,9 @@ import (
 )
 
 type ArticleService interface {
-	Save(ctx context.Context, article domain.Article) (int64, error)
-	Publish(ctx context.Context, article domain.Article) (int64, error)
-	PublishV1(ctx context.Context, article domain.Article) (int64, error)
+	Save(ctx context.Context, art domain.Article) (int64, error)
+	Publish(ctx context.Context, art domain.Article) (int64, error)
+	PublishV1(ctx context.Context, art domain.Article) (int64, error)
 	Withdraw(ctx context.Context, uid, id int64) error
 	List(ctx context.Context, author int64, offset, limit int) ([]domain.Article, error)
 	GetById(ctx context.Context, id int64) (domain.Article, error)
@@ -28,17 +28,21 @@ type articleService struct {
 	logger logger.Logger
 }
 
-func (a *articleService) Save(ctx context.Context, article domain.Article) (int64, error) {
-	article.Status = domain.ArticleStatusUnpublished
-	if article.Id > 0 {
-
+func (a *articleService) Save(ctx context.Context, art domain.Article) (int64, error) {
+	art.Status = domain.ArticleStatusUnpublished
+	if art.Id > 0 {
+		err := a.update(ctx, art)
+		return art.Id, err
 	}
+	return a.create(ctx, art)
 }
 
-func (a *articleService) Publish(ctx context.Context, article domain.Article) (int64, error) {
+func (a *articleService) Publish(ctx context.Context, art domain.Article) (int64, error) {
+	art.Status = domain.ArticleStatusPublished
+	return a.repo.Sync(ctx, art)
 }
 
-func (a *articleService) PublishV1(ctx context.Context, article domain.Article) (int64, error) {
+func (a *articleService) PublishV1(ctx context.Context, art domain.Article) (int64, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -66,4 +70,12 @@ func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (d
 func (a *articleService) ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (a *articleService) create(ctx context.Context, art domain.Article) (int64, error) {
+	return a.repo.Create(ctx, art)
+}
+
+func (a *articleService) update(ctx context.Context, art domain.Article) error {
+	return a.repo.Update(ctx, art)
 }

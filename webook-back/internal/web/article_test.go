@@ -2,6 +2,7 @@ package web
 
 import (
 	"github.com/zht-account/webook/internal/domain"
+	"github.com/zht-account/webook/internal/service"
 	"go.uber.org/mock/gomock"
 	"testing"
 )
