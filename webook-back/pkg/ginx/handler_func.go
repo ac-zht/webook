@@ -28,7 +28,7 @@ func WrapReq[Req any](fn func(ctx *gin.Context, req Req) (Result, error)) gin.Ha
 	}
 }
 
-func WrapJwtReq[Req any](fn func(ctx *gin.Context, req Req, user jwt.UserClaims) (Result, error)) gin.HandlerFunc {
+func WrapReqAndClaims[Req any](fn func(ctx *gin.Context, req Req, user jwt.UserClaims) (Result, error)) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req Req
 		if err := ctx.Bind(&req); err != nil {
@@ -44,6 +44,21 @@ func WrapJwtReq[Req any](fn func(ctx *gin.Context, req Req, user jwt.UserClaims)
 		if err != nil {
 			log.Error("执行业务逻辑失败", logger.Error(err))
 		}
-		ctx.JSON(http.StatusOK, res.Msg)
+		ctx.JSON(http.StatusOK, res)
+	}
+}
+
+func WrapClaims[Req any](fn func(ctx *gin.Context, user jwt.UserClaims) (Result, error)) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		user, ok := ctx.MustGet("user").(jwt.UserClaims)
+		if !ok {
+			log.Error("获得用户会话信息失败")
+			return
+		}
+		res, err := fn(ctx, user)
+		if err != nil {
+			log.Error("执行业务逻辑失败", logger.Error(err))
+		}
+		ctx.JSON(http.StatusOK, res)
 	}
 }

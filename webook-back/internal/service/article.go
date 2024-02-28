@@ -48,18 +48,15 @@ func (a *articleService) PublishV1(ctx context.Context, art domain.Article) (int
 }
 
 func (a *articleService) Withdraw(ctx context.Context, uid, id int64) error {
-	//TODO implement me
-	panic("implement me")
+	return a.repo.SyncStatus(ctx, uid, id, domain.ArticleStatusPrivate)
 }
 
 func (a *articleService) List(ctx context.Context, author int64, offset, limit int) ([]domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.repo.List(ctx, author, offset, limit)
 }
 
 func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.repo.GetById(ctx, id)
 }
 
 func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error) {

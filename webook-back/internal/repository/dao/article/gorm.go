@@ -64,7 +64,7 @@ func (dao *GORMArticleDAO) Sync(ctx context.Context, art Article) (int64, error)
 		return 0, err
 	}
 	art.Id = id
-	publishArt := Article(art)
+	publishArt := PublishedArticle(art)
 	publishArt.Utime = now
 	publishArt.Ctime = now
 	err = tx.Clauses(clause.OnConflict{
@@ -81,4 +81,47 @@ func (dao *GORMArticleDAO) Sync(ctx context.Context, art Article) (int64, error)
 	}
 	tx.Commit()
 	return id, tx.Error
+}
+
+func (dao *GORMArticleDAO) SyncStatus(ctx context.Context, author, id int64, status uint8) error {
+	return dao.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := tx.Model(&Article{}).
+			Where("id=? AND author_id = ?", id, author).
+			Update("status", status)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected != 1 {
+			return ErrPossibleIncorrectAuthor
+		}
+		res = tx.Model(&PublishedArticle{}).
+			Where("id=? AND author_id = ?", id, author).
+			Update("status", status)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected != 1 {
+			return ErrPossibleIncorrectAuthor
+		}
+		return nil
+	})
+}
+
+func (dao *GORMArticleDAO) GetById(ctx context.Context, id int64) (Article, error) {
+	var art Article
+	err := dao.db.WithContext(ctx).Model(&Article{}).
+		Where("id = ?", id).
+		First(&art).Error
+	return art, err
+}
+
+func (dao *GORMArticleDAO) GetByAuthor(ctx context.Context, author int64, offset, limit int) ([]Article, error) {
+	var arts []Article
+	err := dao.db.WithContext(ctx).Model(&Article{}).
+		Where("author_id = ?", author).
+		Offset(offset).
+		Limit(limit).
+		Order("utime DESC").
+		Find(&arts).Error
+	return arts, err
 }

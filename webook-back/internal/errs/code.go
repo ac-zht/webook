@@ -1,12 +1,10 @@
 package errs
 
 const (
-	UserInvalidInput           = 401001
-	UserInternalServerError    = 501001
-	ArticleInternalServerError = 601001
+	UserInvalidInput           = 10001
+	UserInternalServerError    = 20001
+	ArticleInternalServerError = 30001
 
-	UserInvalidOrPassword = 401002
-	UserDuplicateEmail    = 401003
-
-	UserGetSessionsFail = 501002
+	UserInvalidOrPassword = 10002
+	UserDuplicateEmail    = 10003
 )

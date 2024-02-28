@@ -10,3 +10,5 @@ type Article struct {
 	Ctime    int64 `bson:"ctime,omitempty"`
 	Utime    int64 `bson:"utime,omitempty" gorm:"index"`
 }
+
+type PublishedArticle Article
