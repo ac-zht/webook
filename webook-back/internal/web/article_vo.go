@@ -21,6 +21,11 @@ type ArticleVo struct {
 	Collected bool `json:"collected"`
 }
 
+type LikeReq struct {
+	Id   int64 `json:"id"`
+	Like bool  `json:"like"`
+}
+
 type ArticleReq struct {
 	Id      int64  `json:"id"`
 	Title   string `json:"title"`

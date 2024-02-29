@@ -60,8 +60,7 @@ func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article,
 }
 
 func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.repo.GetPublishedById(ctx, id)
 }
 
 func (a *articleService) ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error) {

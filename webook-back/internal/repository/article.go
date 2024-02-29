@@ -17,6 +17,7 @@ type ArticleRepository interface {
 	Sync(ctx context.Context, arr domain.Article) (int64, error)
 	SyncStatus(ctx context.Context, uid, id int64, status domain.ArticleStatus) error
 	GetById(ctx context.Context, id int64) (domain.Article, error)
+	GetPublishedById(ctx context.Context, id int64) (domain.Article, error)
 
 	List(ctx context.Context, author int64, offset, limit int) ([]domain.Article, error)
 }
@@ -119,6 +120,37 @@ func (c *CachedArticleRepository) GetById(ctx context.Context, id int64) (domain
 		return domain.Article{}, err
 	}
 	return c.toDomain(art), nil
+}
+
+func (c *CachedArticleRepository) GetPublishedById(ctx context.Context, id int64) (domain.Article, error) {
+	res, err := c.cache.GetPub(ctx, id)
+	if err != nil {
+		return res, err
+	}
+	art, err := c.dao.GetPubById(ctx, id)
+	if err != nil {
+		return domain.Article{}, err
+	}
+	user, err := c.userRepo.FindById(ctx, art.AuthorId)
+	if err != nil {
+		return domain.Article{}, err
+	}
+	res = domain.Article{
+		Id:      art.Id,
+		Title:   art.Title,
+		Status:  domain.ArticleStatus(art.Status),
+		Content: art.Content,
+		Author: domain.Author{
+			Id:   user.Id,
+			Name: user.Nickname,
+		},
+	}
+	go func() {
+		if err = c.cache.SetPub(ctx, res); err != nil {
+			c.l.Error("缓存已发表文章失败", logger.Error(err), logger.Int64("aid", res.Id))
+		}
+	}()
+	return res, nil
 }
 
 func (c *CachedArticleRepository) List(ctx context.Context, author int64, offset, limit int) ([]domain.Article, error) {

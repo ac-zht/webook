@@ -17,6 +17,7 @@ type ArticleCache interface {
 	Set(ctx context.Context, art domain.Article) error
 	Get(ctx context.Context, id int64) (domain.Article, error)
 	SetPub(ctx context.Context, art domain.Article) error
+	GetPub(ctx context.Context, id int64) (domain.Article, error)
 }
 
 type RedisArticleCache struct {
@@ -80,6 +81,16 @@ func (r *RedisArticleCache) SetPub(ctx context.Context, art domain.Article) erro
 	return r.client.Set(ctx, r.readerArtKey(art.Id),
 		data,
 		time.Minute*30).Err()
+}
+
+func (r *RedisArticleCache) GetPub(ctx context.Context, id int64) (domain.Article, error) {
+	data, err := r.client.Get(ctx, r.readerArtKey(id)).Bytes()
+	if err != nil {
+		return domain.Article{}, err
+	}
+	var res domain.Article
+	err = json.Unmarshal(data, &res)
+	return res, err
 }
 
 // 创作端缓存设置

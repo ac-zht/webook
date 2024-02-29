@@ -38,7 +38,8 @@ func (a *ArticleHandler) RegisterRoutes(server *gin.Engine) {
 	g.POST("/list", a.List)
 
 	pub := g.Group("/pub")
-	pub.GET("/:id")
+	pub.GET("/:id", ginx.WrapClaims(a.PubDetail))
+	//pub.POST("/like", ginx.WrapReqAndClaims[LikeReq](a.Like))
 }
 
 func (a *ArticleHandler) Edit(ctx *gin.Context, req ArticleReq, user jwt.UserClaims) (Result, error) {
@@ -183,7 +184,7 @@ func (a *ArticleHandler) List(ctx *gin.Context) {
 	})
 }
 
-func (a *ArticleHandler) PuDetail(ctx *gin.Context, uc ginx.UserClaims) (Result, error) {
+func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ginx.UserClaims) (Result, error) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -218,6 +219,12 @@ func (a *ArticleHandler) PuDetail(ctx *gin.Context, uc ginx.UserClaims) (Result,
 			Status:  art.Status.ToUint8(),
 			Content: art.Content,
 			Author:  art.Author.Name,
+			Ctime:   art.Ctime.Format(time.DateTime),
+			Utime:   art.Utime.Format(time.DateTime),
 		},
-	}
+	}, nil
 }
+
+//func (a *ArticleHandler) Like(ctx *gin.Context, req LikeReq, uc jwt.UserClaims) (ginx.Result, error) {
+//
+//}
