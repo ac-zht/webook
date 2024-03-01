@@ -28,6 +28,24 @@ type articleService struct {
 	logger logger.Logger
 }
 
+func NewArticleService(repo repository.ArticleRepository, l logger.Logger) ArticleService {
+	return &articleService{
+		repo:   repo,
+		logger: l,
+	}
+}
+
+func NewArticleServiceV1(
+	authorRepo repository.ArticleAuthorRepository,
+	readerRepo repository.ArticleReaderRepository,
+	l logger.Logger) ArticleService {
+	return &articleService{
+		authorRepo: authorRepo,
+		readerRepo: readerRepo,
+		logger:     l,
+	}
+}
+
 func (a *articleService) Save(ctx context.Context, art domain.Article) (int64, error) {
 	art.Status = domain.ArticleStatusUnpublished
 	if art.Id > 0 {
@@ -43,8 +61,35 @@ func (a *articleService) Publish(ctx context.Context, art domain.Article) (int64
 }
 
 func (a *articleService) PublishV1(ctx context.Context, art domain.Article) (int64, error) {
-	//TODO implement me
-	panic("implement me")
+	var (
+		id  = art.Id
+		err error
+	)
+	if art.Id == 0 {
+		id, err = a.authorRepo.Create(ctx, art)
+	} else {
+		err = a.authorRepo.Update(ctx, art)
+	}
+	if err != nil {
+		return 0, err
+	}
+	art.Id = id
+	for i := 0; i < 3; i++ {
+		err = a.readerRepo.Save(ctx, art)
+		if err == nil {
+			break
+		}
+		a.logger.Error("部分失败： 保存数据到线上库失败",
+			logger.Field{Key: "art_id", Value: id},
+			logger.Error(err))
+	}
+	if err != nil {
+		a.logger.Error("部分失败：保存数据到线上库重试都失败",
+			logger.Field{Key: "art_id", Value: id},
+			logger.Error(err))
+		return 0, err
+	}
+	return id, nil
 }
 
 func (a *articleService) Withdraw(ctx context.Context, uid, id int64) error {
@@ -64,8 +109,7 @@ func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (d
 }
 
 func (a *articleService) ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	return a.repo.ListPub(ctx, startTime, offset, limit)
 }
 
 func (a *articleService) create(ctx context.Context, art domain.Article) (int64, error) {

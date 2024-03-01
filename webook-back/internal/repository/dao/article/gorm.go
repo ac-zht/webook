@@ -133,3 +133,14 @@ func (dao *GORMArticleDAO) GetByAuthor(ctx context.Context, author int64, offset
 		Find(&arts).Error
 	return arts, err
 }
+
+func (dao *GORMArticleDAO) ListPubByUtime(ctx context.Context, utime time.Time, offset, limit int) ([]PublishedArticle, error) {
+	var arts []PublishedArticle
+	err := dao.db.WithContext(ctx).Model(&PublishedArticle{}).
+		Where("utime < ?", utime.UnixMilli()).
+		Offset(offset).
+		Limit(limit).
+		Order("utime DESC").
+		Find(&arts).Error
+	return arts, err
+}

@@ -3,6 +3,7 @@ package article
 import (
 	"context"
 	"errors"
+	"time"
 )
 
 var ErrPossibleIncorrectAuthor = errors.New("用户在尝试操作非本人数据")
@@ -15,4 +16,5 @@ type ArticleDAO interface {
 	GetById(ctx context.Context, id int64) (Article, error)
 	GetPubById(ctx context.Context, id int64) (PublishedArticle, error)
 	GetByAuthor(ctx context.Context, author int64, offset, limit int) ([]Article, error)
+	ListPubByUtime(ctx context.Context, utime time.Time, offset, limit int) ([]PublishedArticle, error)
 }

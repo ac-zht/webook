@@ -7,6 +7,7 @@ import (
 	"github.com/zht-account/webook/internal/repository/cache"
 	"github.com/zht-account/webook/internal/repository/dao/article"
 	"github.com/zht-account/webook/pkg/logger"
+	"time"
 )
 
 type ArticleRepository interface {
@@ -20,12 +21,7 @@ type ArticleRepository interface {
 	GetPublishedById(ctx context.Context, id int64) (domain.Article, error)
 
 	List(ctx context.Context, author int64, offset, limit int) ([]domain.Article, error)
-}
-
-type ArticleAuthorRepository interface {
-}
-
-type ArticleReaderRepository interface {
+	ListPub(ctx context.Context, utime time.Time, offset, limit int) ([]domain.Article, error)
 }
 
 type CachedArticleRepository struct {
@@ -182,6 +178,16 @@ func (c *CachedArticleRepository) List(ctx context.Context, author int64, offset
 		c.l.Error("刷新第一页文章的缓存失败", logger.Int64("author", author), logger.Error(err))
 	}
 	return res, nil
+}
+
+func (c *CachedArticleRepository) ListPub(ctx context.Context, utime time.Time, offset, limit int) ([]domain.Article, error) {
+	val, err := c.dao.ListPubByUtime(ctx, utime, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	return slice.Map[article.PublishedArticle, domain.Article](val, func(idx int, src article.PublishedArticle) domain.Article {
+		return c.toDomain(article.Article(src))
+	}), nil
 }
 
 func (c *CachedArticleRepository) preCache(ctx context.Context, arts []domain.Article) {
