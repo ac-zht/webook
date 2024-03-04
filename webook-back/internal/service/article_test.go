@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func TestArticleHandler_Edit(t *testing.T) {
+func TestArticleService_PublishV1(t *testing.T) {
 	testCases := []struct {
 		name string
 		mock func(ctrl *gomock.Controller) (
