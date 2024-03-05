@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zht-account/webook/internal/domain"
+	"github.com/zht-account/webook/internal/errs"
 	"github.com/zht-account/webook/internal/service"
 	svcmocks "github.com/zht-account/webook/internal/service/mocks"
 	"github.com/zht-account/webook/internal/web/jwt"
@@ -41,12 +43,13 @@ func TestArticleHandler_Publish(t *testing.T) {
 				return svc
 			},
 			reqBody: `
-{
-    "title":"我的标题",
-    "content":"我的内容"
-}`,
+    {
+       "title":"我的标题",
+       "content":"我的内容"
+    }`,
 			wantCode: 200,
 			wantRes: Result{
+				Msg:  "OK",
 				Data: float64(1),
 			},
 		},
@@ -65,13 +68,14 @@ func TestArticleHandler_Publish(t *testing.T) {
 				return svc
 			},
 			reqBody: `
-{
-    "id": 12,
-    "title": "我的标题",
-    "content":"我的内容"
-}`,
+    {
+       "id": 12,
+       "title": "我的标题",
+       "content":"我的内容"
+    }`,
 			wantCode: 200,
 			wantRes: Result{
+				Msg:  "OK",
 				Data: float64(12),
 			},
 		},
@@ -80,7 +84,6 @@ func TestArticleHandler_Publish(t *testing.T) {
 			mock: func(ctrl *gomock.Controller) service.ArticleService {
 				svc := svcmocks.NewMockArticleService(ctrl)
 				svc.EXPECT().Publish(gomock.Any(), domain.Article{
-					Id:      12,
 					Title:   "我的标题",
 					Content: "我的内容",
 					Author: domain.Author{
@@ -90,13 +93,13 @@ func TestArticleHandler_Publish(t *testing.T) {
 				return svc
 			},
 			reqBody: `
-{
-    "title": "我的标题",
-    "content":"我的内容"
-}`,
+    {
+       "title": "我的标题",
+       "content":"我的内容"
+    }`,
 			wantCode: 200,
 			wantRes: Result{
-				Code: 5,
+				Code: errs.ArticleInternalServerError,
 				Msg:  "系统错误",
 			},
 		},
@@ -107,19 +110,21 @@ func TestArticleHandler_Publish(t *testing.T) {
 				return svc
 			},
 			reqBody: `
-{
-    "title": "我的标题",
-    "cont
-}`,
+    {
+       "title": "我的标题",
+       "cont
+    }`,
 			wantCode: http.StatusBadRequest,
 		},
 	}
 	for _, tc := range testCases {
+		fmt.Println(tc.name)
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			svc := tc.mock(ctrl)
 			hdl := NewArticleHandler(svc, logger.NewNoOpLogger())
+			gin.SetMode(gin.TestMode)
 
 			//注册路由
 			server := gin.Default()
