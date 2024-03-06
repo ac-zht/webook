@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var ErrDataNotFound = gorm.ErrRecordNotFound
+
 var ErrUserDuplicate = errors.New("用户邮箱或者手机号冲突")
 
 type UserDAO interface {

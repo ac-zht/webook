@@ -123,7 +123,7 @@ func TestArticleHandler_Publish(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			svc := tc.mock(ctrl)
-			hdl := NewArticleHandler(svc, logger.NewNoOpLogger())
+			hdl := NewArticleHandler(svc, nil, logger.NewNoOpLogger())
 			gin.SetMode(gin.TestMode)
 
 			//注册路由

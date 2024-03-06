@@ -26,6 +26,11 @@ type LikeReq struct {
 	Like bool  `json:"like"`
 }
 
+type CollectReq struct {
+	Id  int64 `json:"id"`
+	Cid int64 `json:"cid"`
+}
+
 type ArticleReq struct {
 	Id      int64  `json:"id"`
 	Title   string `json:"title"`
