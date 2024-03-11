@@ -36,6 +36,13 @@ type RedisInteractiveCache struct {
 	expiration time.Duration
 }
 
+func NewRedisInteractiveCache(client redis.Cmdable, exp time.Duration) InteractiveCache {
+	return &RedisInteractiveCache{
+		client:     client,
+		expiration: exp,
+	}
+}
+
 func (r *RedisInteractiveCache) Set(ctx context.Context, biz string, bizId int64, intr domain.Interactive) error {
 	key := r.key(biz, bizId)
 	err := r.client.HMSet(ctx, key,

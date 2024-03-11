@@ -20,7 +20,7 @@ type SaramaSyncProducer struct {
 	producer sarama.SyncProducer
 }
 
-func (s SaramaSyncProducer) ProduceReadEvent(evt ReadEvent) error {
+func (s *SaramaSyncProducer) ProduceReadEvent(evt ReadEvent) error {
 	val, err := json.Marshal(evt)
 	if err != nil {
 		return err

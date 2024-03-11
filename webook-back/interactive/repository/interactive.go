@@ -11,6 +11,7 @@ import (
 
 type InteractiveRepository interface {
 	IncrReadCnt(ctx context.Context, biz string, bizId int64) error
+	BatchIncrReadCnt(ctx context.Context, bizs []string, bizIds []int64) error
 	IncrLike(ctx context.Context, biz string, bizId, uid int64) error
 	DecrLike(ctx context.Context, biz string, bizId, uid int64) error
 	AddCollectionItem(ctx context.Context, biz string, bizId, cid, uid int64) error
@@ -116,6 +117,11 @@ func (c *CachedReadCntRepository) IncrReadCnt(ctx context.Context, biz string, b
 	return c.cache.IncrReadCntIfPresent(ctx, biz, bizId)
 }
 
+func (c *CachedReadCntRepository) BatchIncrReadCnt(ctx context.Context,
+	bizs []string, bizIds []int64) error {
+	return c.dao.BatchIncrReadCnt(ctx, bizs, bizIds)
+}
+
 func (c *CachedReadCntRepository) toDomain(intr dao2.Interactive) domain.Interactive {
 	return domain.Interactive{
 		Biz:        intr.Biz,
@@ -123,5 +129,14 @@ func (c *CachedReadCntRepository) toDomain(intr dao2.Interactive) domain.Interac
 		LikeCnt:    intr.LikeCnt,
 		CollectCnt: intr.CollectCnt,
 		ReadCnt:    intr.ReadCnt,
+	}
+}
+
+func NewCachedInteractiveRepository(dao dao2.InteractiveDAO,
+	cache cache.InteractiveCache, l logger.Logger) InteractiveRepository {
+	return &CachedReadCntRepository{
+		dao:   dao,
+		cache: cache,
+		l:     l,
 	}
 }

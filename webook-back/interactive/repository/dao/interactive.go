@@ -9,6 +9,7 @@ import (
 
 type InteractiveDAO interface {
 	IncrReadCnt(ctx context.Context, biz string, bizId int64) error
+	BatchIncrReadCnt(ctx context.Context, bizs []string, ids []int64) error
 	InsertLikeInfo(ctx context.Context, biz string, bizId, uid int64) error
 	DeleteLikeInfo(ctx context.Context, biz string, bizId, uid int64) error
 	InsertCollectionBiz(ctx context.Context, cb UserCollectionBiz) error
@@ -20,6 +21,12 @@ type InteractiveDAO interface {
 
 type GORMInteractiveDAO struct {
 	db *gorm.DB
+}
+
+func NewGORMInteractiveDAO(db *gorm.DB) InteractiveDAO {
+	return &GORMInteractiveDAO{
+		db: db,
+	}
 }
 
 func (dao *GORMInteractiveDAO) GetByIds(ctx context.Context, biz string, ids []int64) ([]Interactive, error) {
@@ -140,6 +147,18 @@ func (dao *GORMInteractiveDAO) InsertLikeInfo(ctx context.Context, biz string, b
 
 func (dao *GORMInteractiveDAO) IncrReadCnt(ctx context.Context, biz string, bizId int64) error {
 	return dao.incrReadCnt(dao.db.WithContext(ctx), biz, bizId)
+}
+
+func (dao *GORMInteractiveDAO) BatchIncrReadCnt(ctx context.Context, bizs []string, ids []int64) error {
+	return dao.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for i := 0; i < len(bizs); i++ {
+			err := dao.incrReadCnt(tx, bizs[i], ids[i])
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (dao *GORMInteractiveDAO) incrReadCnt(tx *gorm.DB, biz string, bizId int64) error {

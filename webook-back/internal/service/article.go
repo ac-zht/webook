@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/zht-account/webook/internal/domain"
+	events "github.com/zht-account/webook/internal/events/article"
 	"github.com/zht-account/webook/internal/repository"
 	"github.com/zht-account/webook/pkg/logger"
 	"time"
@@ -26,12 +27,17 @@ type articleService struct {
 
 	repo   repository.ArticleRepository
 	logger logger.Logger
+
+	producer events.Producer
 }
 
-func NewArticleService(repo repository.ArticleRepository, l logger.Logger) ArticleService {
+func NewArticleService(repo repository.ArticleRepository,
+	l logger.Logger,
+	producer events.Producer) ArticleService {
 	return &articleService{
-		repo:   repo,
-		logger: l,
+		repo:     repo,
+		logger:   l,
+		producer: producer,
 	}
 }
 
@@ -105,7 +111,22 @@ func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article,
 }
 
 func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error) {
-	return a.repo.GetPublishedById(ctx, id)
+	res, err := a.repo.GetPublishedById(ctx, id)
+	go func() {
+		if err != nil {
+			er := a.producer.ProduceReadEvent(events.ReadEvent{
+				Aid: id,
+				Uid: uid,
+			})
+			if er != nil {
+				a.logger.Error("发送消息失败",
+					logger.Int64("uid", uid),
+					logger.Int64("aid", id),
+					logger.Error(err))
+			}
+		}
+	}()
+	return res, err
 }
 
 func (a *articleService) ListPub(ctx context.Context, startTime time.Time, offset, limit int) ([]domain.Article, error) {
