@@ -2,15 +2,27 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+	"net/http"
 	"time"
 )
 
 func main() {
 	initViperRemote()
-	server := InitWebServer()
+	app := InitApp()
+	for _, c := range app.consumers {
+		err := c.Start()
+		if err != nil {
+			panic(err)
+		}
+	}
+	server := app.web
+	server.GET("/hello", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "hello, world")
+	})
 	server.Run(":8080")
 }
 

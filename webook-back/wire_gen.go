@@ -7,10 +7,16 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/google/wire"
+	repository2 "github.com/zht-account/webook/interactive/repository"
+	cache2 "github.com/zht-account/webook/interactive/repository/cache"
+	dao2 "github.com/zht-account/webook/interactive/repository/dao"
+	service2 "github.com/zht-account/webook/interactive/service"
+	article2 "github.com/zht-account/webook/internal/events/article"
 	"github.com/zht-account/webook/internal/repository"
 	"github.com/zht-account/webook/internal/repository/cache"
 	"github.com/zht-account/webook/internal/repository/dao"
+	"github.com/zht-account/webook/internal/repository/dao/article"
 	"github.com/zht-account/webook/internal/service"
 	"github.com/zht-account/webook/internal/web"
 	"github.com/zht-account/webook/internal/web/jwt"
@@ -23,9 +29,10 @@ import (
 
 // Injectors from wire.go:
 
-func InitWebServer() *gin.Engine {
+func InitApp() *App {
 	cmdable := ioc.InitRedis()
-	v := ioc.InitMiddlewares(cmdable)
+	handler := jwt.NewRedisHandler(cmdable)
+	v := ioc.InitMiddlewares(cmdable, handler)
 	db := ioc.InitDB()
 	userDAO := dao.NewUserDAO(db)
 	userCache := cache.NewRedisUserCache(cmdable)
@@ -36,8 +43,28 @@ func InitWebServer() *gin.Engine {
 	codeCache := cache.NewRedisCodeCache(cmdable)
 	codeRepository := repository.NewCacheCodeRepository(codeCache)
 	codeService := service.NewSMSCodeService(smsService, codeRepository)
-	handler := jwt.NewRedisHandler(cmdable)
 	userHandler := web.NewUserHandler(userService, codeService, handler)
-	engine := ioc.InitGin(v, userHandler, logger)
-	return engine
+	articleDAO := article.NewGORMArticleDAO(db)
+	articleCache := cache.NewRedisArticleCache(cmdable)
+	articleRepository := repository.NewArticleRepository(articleDAO, articleCache, userRepository, logger)
+	client := ioc.InitKafka()
+	syncProducer := ioc.NewSyncProducer(client)
+	producer := article2.NewSaramaSyncProducer(syncProducer)
+	articleService := service.NewArticleService(articleRepository, logger, producer)
+	interactiveDAO := dao2.NewGORMInteractiveDAO(db)
+	interactiveCache := cache2.NewRedisInteractiveCache(cmdable)
+	interactiveRepository := repository2.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, logger)
+	interactiveService := service2.NewInteractiveService(interactiveRepository, logger)
+	articleHandler := web.NewArticleHandler(articleService, interactiveService, logger)
+	engine := ioc.InitWebServer(v, userHandler, articleHandler, logger)
+	v2 := ioc.NewConsumers()
+	app := &App{
+		web:       engine,
+		consumers: v2,
+	}
+	return app
 }
+
+// wire.go:
+
+var interactiveServiceProducer = wire.NewSet(dao2.NewGORMInteractiveDAO, cache2.NewRedisInteractiveCache, repository2.NewCachedInteractiveRepository, service2.NewInteractiveService)

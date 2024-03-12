@@ -1,7 +1,11 @@
 db:
-  dsn: "root:18627502290@tcp(localhost:3306)/test"
+  dsn: "root:18627502290@tcp(localhost:3306)/webook"
 
 redis:
   addr: "120.24.91.113:7002"
   password: "uphill"
   db: 2
+
+kafka:
+  addrs:
+    - "193.112.85.1:9092"

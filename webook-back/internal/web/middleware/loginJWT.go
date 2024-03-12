@@ -14,7 +14,7 @@ type LoginJWTMiddlewareBuilder struct {
 	ijwt.Handler
 }
 
-func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
+func NewLoginJWTMiddlewareBuilder(hdl ijwt.Handler) *LoginJWTMiddlewareBuilder {
 	s := set.NewMapSet[string](3)
 	s.Add("/users/signup")
 	s.Add("/users/login_sms/code/send")
@@ -22,6 +22,7 @@ func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
 	s.Add("/users/login")
 	return &LoginJWTMiddlewareBuilder{
 		publicPaths: s,
+		Handler:     hdl,
 	}
 }
 

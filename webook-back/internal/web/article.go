@@ -58,7 +58,6 @@ func (a *ArticleHandler) Edit(ctx *gin.Context, req ArticleReq, user jwt.UserCla
 		}, err
 	}
 	return Result{
-		Msg:  "OK",
 		Data: id,
 	}, nil
 }

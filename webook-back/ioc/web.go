@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/zht-account/webook/internal/web"
+	ijwt "github.com/zht-account/webook/internal/web/jwt"
 	"github.com/zht-account/webook/internal/web/middleware"
 	"github.com/zht-account/webook/pkg/ginx"
 	"github.com/zht-account/webook/pkg/ginx/middleware/ratelimit"
@@ -13,18 +14,22 @@ import (
 	"time"
 )
 
-func InitGin(mids []gin.HandlerFunc, hdl *web.UserHandler, l logger.Logger) *gin.Engine {
+func InitWebServer(mids []gin.HandlerFunc,
+	userHdl *web.UserHandler,
+	artHdl *web.ArticleHandler,
+	l logger.Logger) *gin.Engine {
 	ginx.SetLogger(l)
 	server := gin.Default()
 	server.Use(mids...)
-	hdl.RegisterRoutes(server)
+	userHdl.RegisterRoutes(server)
+	artHdl.RegisterRoutes(server)
 	return server
 }
 
-func InitMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
+func InitMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		corsHdl(),
-		loginHdl(),
+		loginHdl(hdl),
 		rateLimitHdl(redisClient),
 	}
 }
@@ -44,8 +49,8 @@ func corsHdl() gin.HandlerFunc {
 	})
 }
 
-func loginHdl() gin.HandlerFunc {
-	return middleware.NewLoginJWTMiddlewareBuilder().Build()
+func loginHdl(hdl ijwt.Handler) gin.HandlerFunc {
+	return middleware.NewLoginJWTMiddlewareBuilder(hdl).Build()
 }
 
 func rateLimitHdl(redisClient redis.Cmdable) gin.HandlerFunc {

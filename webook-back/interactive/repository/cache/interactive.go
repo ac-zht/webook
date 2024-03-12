@@ -36,10 +36,9 @@ type RedisInteractiveCache struct {
 	expiration time.Duration
 }
 
-func NewRedisInteractiveCache(client redis.Cmdable, exp time.Duration) InteractiveCache {
+func NewRedisInteractiveCache(client redis.Cmdable) InteractiveCache {
 	return &RedisInteractiveCache{
-		client:     client,
-		expiration: exp,
+		client: client,
 	}
 }
 

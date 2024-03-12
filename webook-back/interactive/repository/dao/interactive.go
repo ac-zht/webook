@@ -177,6 +177,7 @@ func (dao *GORMInteractiveDAO) incrReadCnt(tx *gorm.DB, biz string, bizId int64)
 	}).Error
 }
 
+// Interactive 文章的阅读，收藏，点赞量
 type Interactive struct {
 	Id         int64  `gorm:"primaryKey,autoIncrement"`
 	BizId      int64  `gorm:"uniqueIndex:biz_type_id"`
@@ -189,17 +190,29 @@ type Interactive struct {
 	Utime int64
 }
 
+// UserLikeBiz 用户点赞文章
 type UserLikeBiz struct {
-	Id     int64  `gorm:"primaryKey,autoIncrement"`
-	BizId  int64  `gorm:"uniqueIndex:biz_type_id_uid"`
-	Biz    string `gorm:"type:varchar(128);uniqueIndex:biz_type_id_uid"`
-	Uid    int64  `gorm:"uniqueIndex:biz_type_id_uid"`
+	Id    int64  `gorm:"primaryKey,autoIncrement"`
+	BizId int64  `gorm:"uniqueIndex:biz_type_id_uid"`
+	Biz   string `gorm:"type:varchar(128);uniqueIndex:biz_type_id_uid"`
+	Uid   int64  `gorm:"uniqueIndex:biz_type_id_uid"`
+
 	Status uint8
+	Ctime  int64
+	Utime  int64
+}
+
+// Collection 收藏夹
+type Collection struct {
+	Id   int64  `gorm:"primaryKey,autoIncrement"`
+	Name string `gorm:"type=varchar(1024)"`
+	Uid  int64  `gorm:""`
 
 	Ctime int64
 	Utime int64
 }
 
+// UserCollectionBiz 收藏的东西
 type UserCollectionBiz struct {
 	Id    int64  `gorm:"primaryKey,autoIncrement"`
 	Cid   int64  `gorm:"index"`
