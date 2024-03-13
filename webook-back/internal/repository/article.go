@@ -108,7 +108,7 @@ func (c *CachedArticleRepository) SyncStatus(ctx context.Context, uid, id int64,
 
 func (c *CachedArticleRepository) GetById(ctx context.Context, id int64) (domain.Article, error) {
 	cacheArt, err := c.cache.Get(ctx, id)
-	if err != nil {
+	if err == nil {
 		return cacheArt, nil
 	}
 	art, err := c.dao.GetById(ctx, id)
