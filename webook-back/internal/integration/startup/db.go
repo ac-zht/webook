@@ -23,7 +23,7 @@ func InitTestDB() *gorm.DB {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			err = sqlDB.PingContext(ctx)
 			cancel()
-			if err != nil {
+			if err == nil {
 				break
 			}
 			log.Println("等待连接 MYSQL", err)
