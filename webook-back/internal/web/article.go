@@ -71,7 +71,6 @@ func (a *ArticleHandler) Publish(ctx *gin.Context, req ArticleReq, user jwt.User
 		}, err
 	}
 	return Result{
-		Msg:  "OK",
 		Data: id,
 	}, err
 }

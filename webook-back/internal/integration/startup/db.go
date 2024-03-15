@@ -3,7 +3,6 @@ package startup
 import (
 	"context"
 	"database/sql"
-	"github.com/zht-account/webook/internal/repository/dao"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
@@ -32,10 +31,10 @@ func InitTestDB() *gorm.DB {
 		if err != nil {
 			panic(err)
 		}
-		err = dao.InitTables(db)
-		if err != nil {
-			panic(err)
-		}
+		//err = dao.InitTables(db)
+		//if err != nil {
+		//	panic(err)
+		//}
 	}
 	return db
 }

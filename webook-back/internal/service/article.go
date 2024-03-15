@@ -113,7 +113,7 @@ func (a *articleService) GetById(ctx context.Context, id int64) (domain.Article,
 func (a *articleService) GetPublishedById(ctx context.Context, id, uid int64) (domain.Article, error) {
 	res, err := a.repo.GetPublishedById(ctx, id)
 	go func() {
-		if err != nil {
+		if err == nil {
 			er := a.producer.ProduceReadEvent(events.ReadEvent{
 				Aid: id,
 				Uid: uid,
