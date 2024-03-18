@@ -24,6 +24,8 @@ import (
 	"time"
 )
 
+const topicReadEvent = "article_read_event"
+
 type Article struct {
 	Id      int64  `json:"id"`
 	Title   string `json:"title"`
@@ -60,6 +62,8 @@ func (a *ArticleGORMHandlerTestSuite) SetupTest() {
 	err := a.db.Exec("TRUNCATE TABLE `articles`").Error
 	assert.NoError(a.T(), err)
 	err = a.db.Exec("TRUNCATE TABLE `published_articles`").Error
+	assert.NoError(a.T(), err)
+	err = a.db.Exec("TRUNCATE TABLE `interactives`").Error
 	assert.NoError(a.T(), err)
 }
 
@@ -445,7 +449,7 @@ func (a *ArticleGORMHandlerTestSuite) TestPubDetail() {
 				assert.NoError(t, err)
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 				defer cancel()
-				err = consumer.Consume(ctx, []string{}, saramax.HandlerFunc(func(session sarama.ConsumerGroupSession,
+				err = consumer.Consume(ctx, []string{topicReadEvent}, saramax.HandlerFunc(func(session sarama.ConsumerGroupSession,
 					claim sarama.ConsumerGroupClaim) error {
 					select {
 					case <-ctx.Done():
@@ -458,12 +462,20 @@ func (a *ArticleGORMHandlerTestSuite) TestPubDetail() {
 						}
 						assert.Equal(t, articleEvents.ReadEvent{
 							Aid: 1,
-							Uid: 123,
+							Uid: 3,
 						}, evt)
 					}
 					return nil
 				}))
 				assert.NoError(t, err)
+			},
+			wantCode: 200,
+			wantResult: Result[Article]{
+				Data: Article{
+					Id:      1,
+					Title:   "我的标题",
+					Content: "我的内容",
+				},
 			},
 		},
 	}
@@ -484,7 +496,7 @@ func (a *ArticleGORMHandlerTestSuite) TestPubDetail() {
 			if code != http.StatusOK {
 				return
 			}
-			var result Result[int64]
+			var result Result[Article]
 			err = json.Unmarshal(recorder.Body.Bytes(), &result)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.wantResult, result)
