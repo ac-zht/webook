@@ -12,6 +12,7 @@ import (
 
 func main() {
 	initViperRemote()
+	initPrometheus()
 	app := InitApp()
 	for _, c := range app.consumers {
 		err := c.Start()

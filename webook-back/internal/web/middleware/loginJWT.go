@@ -20,6 +20,7 @@ func NewLoginJWTMiddlewareBuilder(hdl ijwt.Handler) *LoginJWTMiddlewareBuilder {
 	s.Add("/users/login_sms/code/send")
 	s.Add("/users/login_sms")
 	s.Add("/users/login")
+	s.Add("/test/metric") //prometheus测试链接
 	return &LoginJWTMiddlewareBuilder{
 		publicPaths: s,
 		Handler:     hdl,

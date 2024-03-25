@@ -56,7 +56,8 @@ func InitApp() *App {
 	interactiveRepository := repository2.NewCachedInteractiveRepository(interactiveDAO, interactiveCache, logger)
 	interactiveService := service2.NewInteractiveService(interactiveRepository, logger)
 	articleHandler := web.NewArticleHandler(articleService, interactiveService, logger)
-	engine := ioc.InitWebServer(v, userHandler, articleHandler, logger)
+	observabilityHandler := web.NewObservabilityHandler()
+	engine := ioc.InitWebServer(v, userHandler, articleHandler, observabilityHandler, logger)
 	v2 := ioc.NewConsumers()
 	app := &App{
 		web:       engine,

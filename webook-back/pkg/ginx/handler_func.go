@@ -2,11 +2,19 @@ package ginx
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/zht-account/webook/pkg/logger"
 	"net/http"
 )
 
 var log logger.Logger = logger.NewNoOpLogger()
+
+var vector *prometheus.CounterVec
+
+func InitCounter(opts prometheus.CounterOpts) {
+	vector = prometheus.NewCounterVec(opts, []string{"code"})
+	prometheus.MustRegister(vector)
+}
 
 func SetLogger(l logger.Logger) {
 	log = l

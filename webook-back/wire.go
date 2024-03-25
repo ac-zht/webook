@@ -64,6 +64,7 @@ func InitApp() *App {
 		jwt.NewRedisHandler,
 		web.NewUserHandler,
 		web.NewArticleHandler,
+		web.NewObservabilityHandler,
 
 		//gin中间件
 		ioc.InitMiddlewares,
