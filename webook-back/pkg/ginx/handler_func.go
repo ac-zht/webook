@@ -5,6 +5,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/zht-account/webook/pkg/logger"
 	"net/http"
+	"strconv"
 )
 
 var log logger.Logger = logger.NewNoOpLogger()
@@ -31,6 +32,7 @@ func WrapReq[Req any](fn func(ctx *gin.Context, req Req) (Result, error)) gin.Ha
 		if err != nil {
 			log.Error("执行业务逻辑失败", logger.Error(err))
 		}
+		vector.WithLabelValues(strconv.Itoa(res.Code)).Inc()
 		ctx.JSON(http.StatusOK, res.Msg)
 	}
 }
@@ -51,6 +53,7 @@ func WrapReqAndClaims[Req any](fn func(ctx *gin.Context, req Req, user UserClaim
 		if err != nil {
 			log.Error("执行业务逻辑失败", logger.Error(err))
 		}
+		vector.WithLabelValues(strconv.Itoa(res.Code)).Inc()
 		ctx.JSON(http.StatusOK, res)
 	}
 }
@@ -66,6 +69,7 @@ func WrapClaims(fn func(ctx *gin.Context, user UserClaims) (Result, error)) gin.
 		if err != nil {
 			log.Error("执行业务逻辑失败", logger.Error(err))
 		}
+		vector.WithLabelValues(strconv.Itoa(res.Code)).Inc()
 		ctx.JSON(http.StatusOK, res)
 	}
 }

@@ -3,6 +3,7 @@ package ioc
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
 	"github.com/zht-account/webook/internal/web"
 	ijwt "github.com/zht-account/webook/internal/web/jwt"
@@ -37,21 +38,21 @@ func InitMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler) []gin.HandlerF
 		InstanceID: "my_instance_1",
 		Help:       "GIN 中 HTTP请求",
 	}
-	//ginx.InitCounter(prometheus.CounterOpts{
-	//    Namespace: "go_item",
-	//    Subsystem: "webook",
-	//    Name:      "http_biz_code",
-	//    Help:      "GIN 中 HTTP请求",
-	//    ConstLabels: map[string]string{
-	//        "instance_id": "my_instance_1",
-	//    },
-	//})
+	ginx.InitCounter(prometheus.CounterOpts{
+		Namespace: "go_item",
+		Subsystem: "webook",
+		Name:      "http_biz_code",
+		Help:      "GIN 中 HTTP请求",
+		ConstLabels: map[string]string{
+			"instance_id": "my_instance_1",
+		},
+	})
 	return []gin.HandlerFunc{
 		pb.BuildResponseTime(),
 		pb.BuildActiveRequest(),
 		corsHdl(),
 		loginHdl(hdl),
-		rateLimitHdl(redisClient),
+		//rateLimitHdl(redisClient),
 	}
 }
 
