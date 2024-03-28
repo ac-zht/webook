@@ -5,6 +5,7 @@ import (
 	prometheus2 "github.com/zht-account/webook/pkg/gormx/callbacks/prometheus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 	"gorm.io/plugin/prometheus"
 )
 
@@ -22,6 +23,10 @@ func InitDB() *gorm.DB {
 			},
 		},
 	}))
+	if err != nil {
+		panic(err)
+	}
+	err = db.Use(tracing.NewPlugin(tracing.WithoutMetrics()))
 	if err != nil {
 		panic(err)
 	}

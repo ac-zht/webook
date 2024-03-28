@@ -67,7 +67,7 @@ func (c *UserHandler) LoginJWT(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, ginx.Result{Msg: "密码必须包含数字、特殊字符，并且长度不能小于 8 位"})
 		return
 	}
-	u, err := c.svc.Login(ctx, req.Email, req.Password)
+	u, err := c.svc.Login(ctx.Request.Context(), req.Email, req.Password)
 	if err == service.ErrInvalidUserOrPassword {
 		ctx.JSON(http.StatusOK, ginx.Result{Msg: "用户名或密码错误"})
 		return
@@ -173,7 +173,7 @@ func (c *UserHandler) SignUp(ctx *gin.Context, req SingUpReq) (ginx.Result, erro
 			Msg:  "密码必须包含数字、特殊字符，并且长度不能小于 8 位",
 		}, nil
 	}
-	err = c.svc.Signup(ctx, domain.User{
+	err = c.svc.Signup(ctx.Request.Context(), domain.User{
 		Email:    req.Email,
 		Password: req.Password,
 		Ctime:    time.Now(),

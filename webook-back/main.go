@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+	"github.com/zht-account/webook/ioc"
 	"net/http"
 	"time"
 )
@@ -13,6 +15,11 @@ import (
 func main() {
 	initViperRemote()
 	initPrometheus()
+	cancel := ioc.InitOTEL()
+	defer func() {
+		cancel(context.Background())
+	}()
+
 	app := InitApp()
 	for _, c := range app.consumers {
 		err := c.Start()

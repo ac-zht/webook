@@ -12,6 +12,7 @@ import (
 	"github.com/zht-account/webook/pkg/ginx/middleware/metrics"
 	"github.com/zht-account/webook/pkg/ginx/middleware/ratelimit"
 	"github.com/zht-account/webook/pkg/logger"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"strings"
 	"time"
 )
@@ -52,6 +53,7 @@ func InitMiddlewares(redisClient redis.Cmdable, hdl ijwt.Handler) []gin.HandlerF
 		pb.BuildActiveRequest(),
 		corsHdl(),
 		loginHdl(hdl),
+		otelgin.Middleware("webook"),
 		//rateLimitHdl(redisClient),
 	}
 }
