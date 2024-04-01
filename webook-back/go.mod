@@ -24,6 +24,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.867
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.867
+	github.com/zht-account/gotools v1.0.3
 	go.mongodb.org/mongo-driver v1.14.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.45.0
 	go.opentelemetry.io/otel v1.19.0

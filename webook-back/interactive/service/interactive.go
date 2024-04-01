@@ -8,6 +8,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+//go:generate mockgen -source=interactive.go -package=svcmocks -destination=./../../internal/service/mocks/interactive.mock.go InteractiveService
 type InteractiveService interface {
 	IncrReadCnt(ctx context.Context, biz string, bizId int64) error
 	Like(ctx context.Context, biz string, bizId, uid int64) error
@@ -15,6 +16,7 @@ type InteractiveService interface {
 	Collect(ctx context.Context, biz string, bizId, cid, uid int64) error
 	Get(ctx context.Context, biz string, bizId, uid int64) (domain.Interactive, error)
 	GetByIds(ctx context.Context, biz string, bizIds []int64) (map[int64]domain.Interactive, error)
+	GetWithoutUid(ctx context.Context, biz string, bizId int64) (domain.Interactive, error)
 }
 
 type interactiveService struct {
@@ -59,6 +61,14 @@ func (i *interactiveService) Get(ctx context.Context, biz string, bizId, uid int
 			logger.Int64("bizId", bizId),
 			logger.Int64("uid", uid),
 			logger.Error(err))
+	}
+	return intr, nil
+}
+
+func (i *interactiveService) GetWithoutUid(ctx context.Context, biz string, bizId int64) (domain.Interactive, error) {
+	intr, err := i.repo.Get(ctx, biz, bizId)
+	if err != nil {
+		return domain.Interactive{}, err
 	}
 	return intr, nil
 }
