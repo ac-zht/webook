@@ -39,6 +39,7 @@ func (p *PrometheusHook) DialHook(next redis.DialHook) redis.DialHook {
 
 func (p *PrometheusHook) ProcessHook(next redis.ProcessHook) redis.ProcessHook {
 	return func(ctx context.Context, cmd redis.Cmder) error {
+		//可以在此处接入本地缓存，所有redis命令会先去查本地缓存
 		start := time.Now()
 		var err error
 		defer func() {

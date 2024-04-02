@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/zht-account/gotools/queue"
-	intr "github.com/zht-account/webook/interactive/service"
+	intrv1 "github.com/zht-account/webook/interactive/service"
 	"github.com/zht-account/webook/internal/domain"
 	"github.com/zht-account/webook/internal/repository"
 	"math"
@@ -17,7 +17,7 @@ type RankingService interface {
 }
 
 type BatchRankingService struct {
-	intrSvc   intr.InteractiveService
+	intrSvc   intrv1.InteractiveService
 	artSvc    ArticleService
 	repo      repository.RankingRepository
 	BatchSize int
@@ -26,7 +26,7 @@ type BatchRankingService struct {
 }
 
 func NewBatchRankingService(
-	intrSvc intr.InteractiveService,
+	intrSvc intrv1.InteractiveService,
 	artSvc ArticleService,
 	repo repository.RankingRepository) RankingService {
 	res := &BatchRankingService{
@@ -41,6 +41,11 @@ func NewBatchRankingService(
 }
 
 func (b *BatchRankingService) RankTopN(ctx context.Context) error {
+	arts, err := b.rankTopN(ctx)
+	if err != nil {
+		return err
+	}
+	return b.repo.ReplaceTopN(ctx, arts)
 }
 
 func (b *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, error) {
@@ -53,7 +58,7 @@ func (b *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, e
 	}
 	que := queue.NewPriorityQueue[Score](b.N,
 		func(src Score, dst Score) int {
-			if src.score > dst.score {
+			if src.score < dst.score {
 				return 1
 			} else if src.score == dst.score {
 				return 0
@@ -68,26 +73,25 @@ func (b *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, e
 		artIds := slice.Map[domain.Article, int64](arts, func(idx int, src domain.Article) int64 {
 			return src.Id
 		})
-		intrResp, err := b.intrSvc.GetByIds(ctx, "article", artIds) //biz_id=>Interactive
+		intrs, err := b.intrSvc.GetByIds(ctx, "article", artIds) //biz_id=>Interactive
 		if err != nil {
 			return nil, err
 		}
-		minScore := float64(0)
 		for _, art := range arts {
-			intr, ok := intrResp[art.Id]
+			intr, ok := intrs[art.Id]
 			if !ok {
 				continue
 			}
 			score := b.scoreFunc(intr.LikeCnt, art.Utime)
-			if score > minScore {
+			val, _ := que.Peek()
+			//要和堆定作比较
+			if score > val.score {
 				ele := Score{art: art, score: score}
 				err = que.Enqueue(ele)
 				if err == queue.ErrOutOfCapacity {
 					_, _ = que.Dequeue()
 					err = que.Enqueue(ele)
 				}
-			} else {
-				minScore = score
 			}
 		}
 		if len(arts) == 0 || len(arts) < b.BatchSize ||
@@ -96,11 +100,17 @@ func (b *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, e
 		}
 		offset = offset + len(arts)
 	}
+	ql := que.Len()
+	res := make([]domain.Article, ql)
+	for i := ql - 1; i >= 0; i-- {
+		val, _ := que.Dequeue()
+		res[i] = val.art
+	}
+	return res, nil
 }
 
 func (b *BatchRankingService) TopN(ctx context.Context) ([]domain.Article, error) {
-	//TODO implement me
-	panic("implement me")
+	return b.repo.GetTopN(ctx)
 }
 
 func (b *BatchRankingService) score(likeCnt int64, utime time.Time) float64 {
