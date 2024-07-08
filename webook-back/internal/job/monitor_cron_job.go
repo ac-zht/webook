@@ -1,9 +1,9 @@
 package job
 
 import (
+	"github.com/ac-zht/webook/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/robfig/cron/v3"
-	"github.com/zht-account/webook/pkg/logger"
 	"strconv"
 	"time"
 )
@@ -13,10 +13,8 @@ type CronJobBuilder struct {
 	l      logger.Logger
 }
 
-func NewCronJobBuilder(l logger.Logger,
-	opt prometheus.SummaryOpts) *CronJobBuilder {
-	vector := prometheus.NewSummaryVec(opt,
-		[]string{"name", "success"})
+func NewCronJobBuilder(l logger.Logger, opt prometheus.SummaryOpts) *CronJobBuilder {
+	vector := prometheus.NewSummaryVec(opt, []string{"name", "success"})
 	prometheus.MustRegister(vector)
 	return &CronJobBuilder{vector: vector, l: l}
 }

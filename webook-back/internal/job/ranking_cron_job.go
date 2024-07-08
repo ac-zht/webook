@@ -3,12 +3,14 @@ package job
 import (
 	"context"
 	"errors"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/service"
-	"github.com/zht-account/webook/pkg/logger"
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/service"
+	"github.com/ac-zht/webook/pkg/logger"
 	"golang.org/x/sync/semaphore"
 	"time"
 )
+
+//基于mysql分布式任务调度机制的抢占
 
 type CronJob = domain.CronJob
 

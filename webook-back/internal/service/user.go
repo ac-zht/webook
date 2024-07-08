@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/repository"
-	"github.com/zht-account/webook/pkg/logger"
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/repository"
+	"github.com/ac-zht/webook/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 

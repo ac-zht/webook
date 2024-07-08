@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
+	"github.com/ac-zht/webook/interactive/domain"
+	"github.com/ac-zht/webook/interactive/repository/cache"
+	dao2 "github.com/ac-zht/webook/interactive/repository/dao"
+	"github.com/ac-zht/webook/pkg/logger"
 	"github.com/ecodeclub/ekit/slice"
-	"github.com/zht-account/webook/interactive/domain"
-	"github.com/zht-account/webook/interactive/repository/cache"
-	dao2 "github.com/zht-account/webook/interactive/repository/dao"
-	"github.com/zht-account/webook/pkg/logger"
 )
 
 type InteractiveRepository interface {

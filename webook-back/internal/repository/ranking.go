@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/repository/cache"
 	"github.com/ecodeclub/ekit/syncx/atomicx"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/repository/cache"
 )
 
 type RankingRepository interface {

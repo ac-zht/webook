@@ -1,4 +1,4 @@
-module github.com/zht-account/webook
+module github.com/ac-zht/webook
 
 go 1.21.5
 
@@ -7,10 +7,11 @@ require (
 	github.com/aws/aws-sdk-go v1.50.31
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dlclark/regexp2 v1.11.0
-	github.com/ecodeclub/ekit v0.0.8
+	github.com/ecodeclub/ekit v0.0.9
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-redis/redis/v9 v9.0.0-beta.2
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/uuid v1.6.0
@@ -25,7 +26,6 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.867
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.867
-	github.com/zht-account/gotools v1.0.6
 	go.mongodb.org/mongo-driver v1.14.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.45.0
 	go.opentelemetry.io/otel v1.19.0
@@ -47,6 +47,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/firestore v1.14.0 // indirect
 	cloud.google.com/go/longrunning v0.5.4 // indirect
+	github.com/ac-zht/gotools v1.0.7 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.10.1 // indirect
@@ -145,7 +146,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.5.0 // indirect
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect

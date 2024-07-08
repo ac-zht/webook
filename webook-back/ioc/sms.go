@@ -1,8 +1,8 @@
 package ioc
 
 import (
-	"github.com/zht-account/webook/internal/service/sms"
-	"github.com/zht-account/webook/internal/service/sms/memory"
+	"github.com/ac-zht/webook/internal/service/sms"
+	"github.com/ac-zht/webook/internal/service/sms/memory"
 )
 
 func InitSMSService() sms.Service {

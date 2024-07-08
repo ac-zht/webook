@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/zht-account/webook/internal/repository/cache"
+	"github.com/ac-zht/webook/internal/repository/cache"
 )
 
 var (

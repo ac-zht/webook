@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/zht-account/webook/interactive/domain"
-	"github.com/zht-account/webook/interactive/repository"
-	"github.com/zht-account/webook/pkg/logger"
+	"github.com/ac-zht/webook/interactive/domain"
+	"github.com/ac-zht/webook/interactive/repository"
+	"github.com/ac-zht/webook/pkg/logger"
 	"golang.org/x/sync/errgroup"
 )
 

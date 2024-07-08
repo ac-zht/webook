@@ -84,10 +84,11 @@ type Job struct {
 	Cfg        string
 	Expression string
 	Version    int64
-	NextTime   int64 `gorm:"index"`
-	Status     int
-	Ctime      int64
-	Utime      int64
+	//可建next_time和status的联合索引
+	NextTime int64 `gorm:"index:status_next_index"`
+	Status   int   `gorm:"index:status_next_index"`
+	Ctime    int64
+	Utime    int64
 }
 
 const (

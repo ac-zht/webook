@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	domain "github.com/zht-account/webook/internal/domain"
+	domain "github.com/ac-zht/webook/internal/domain"
 	gomock "go.uber.org/mock/gomock"
 )
 

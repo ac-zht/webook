@@ -3,10 +3,10 @@ package events
 import (
 	"context"
 	"github.com/IBM/sarama"
-	"github.com/zht-account/webook/interactive/repository"
-	"github.com/zht-account/webook/internal/events"
-	"github.com/zht-account/webook/pkg/logger"
-	"github.com/zht-account/webook/pkg/saramax"
+	"github.com/ac-zht/webook/interactive/repository"
+	"github.com/ac-zht/webook/internal/events"
+	"github.com/ac-zht/webook/pkg/logger"
+	"github.com/ac-zht/webook/pkg/saramax"
 	"time"
 )
 

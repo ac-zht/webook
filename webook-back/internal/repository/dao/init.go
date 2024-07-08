@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"github.com/zht-account/webook/interactive/repository/dao"
-	"github.com/zht-account/webook/internal/repository/dao/article"
+	"github.com/ac-zht/webook/interactive/repository/dao"
+	"github.com/ac-zht/webook/internal/repository/dao/article"
 	"gorm.io/gorm"
 )
 

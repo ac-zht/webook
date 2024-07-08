@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/repository/dao/article"
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/repository/dao/article"
 )
 
 type ArticleAuthorRepository interface {

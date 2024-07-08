@@ -2,13 +2,14 @@ package repository
 
 import (
 	"context"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/repository/dao"
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/repository/dao"
 	"time"
 )
 
 var ErrNoMoreJob = dao.ErrNoMoreJob
 
+//go:generate mockgen -source=./cron_job.go -package=repomocks -destination=mocks/cron_job.mock.go CronJobRepository
 type CronJobRepository interface {
 	Preempt(ctx context.Context) (domain.CronJob, error)
 	UpdateNextTime(ctx context.Context, id int64, t time.Time) error

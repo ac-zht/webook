@@ -3,11 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/repository"
+	"github.com/ac-zht/webook/internal/repository/mocks"
+	"github.com/ac-zht/webook/pkg/logger"
 	"github.com/stretchr/testify/assert"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/repository"
-	articlerepomocks "github.com/zht-account/webook/internal/repository/mocks"
-	"github.com/zht-account/webook/pkg/logger"
 	"go.uber.org/mock/gomock"
 	"testing"
 )
@@ -27,7 +27,7 @@ func TestArticleService_PublishV1(t *testing.T) {
 		{
 			name: "新建发表成功",
 			mock: func(ctrl *gomock.Controller) (repository.ArticleAuthorRepository, repository.ArticleReaderRepository) {
-				ar := articlerepomocks.NewMockArticleAuthorRepository(ctrl)
+				ar := repomocks.NewMockArticleAuthorRepository(ctrl)
 				ar.EXPECT().Create(gomock.Any(), domain.Article{
 					Title:   "我的标题",
 					Content: "我的内容",
@@ -36,7 +36,7 @@ func TestArticleService_PublishV1(t *testing.T) {
 					},
 				}).Return(int64(1), nil)
 
-				rr := articlerepomocks.NewMockArticleReaderRepository(ctrl)
+				rr := repomocks.NewMockArticleReaderRepository(ctrl)
 				rr.EXPECT().Save(gomock.Any(), domain.Article{
 					Id:      1,
 					Title:   "我的标题",
@@ -59,7 +59,7 @@ func TestArticleService_PublishV1(t *testing.T) {
 		{
 			name: "修改保存到制作库失败",
 			mock: func(ctrl *gomock.Controller) (repository.ArticleAuthorRepository, repository.ArticleReaderRepository) {
-				ar := articlerepomocks.NewMockArticleAuthorRepository(ctrl)
+				ar := repomocks.NewMockArticleAuthorRepository(ctrl)
 				ar.EXPECT().Update(gomock.Any(), domain.Article{
 					Id:      7,
 					Title:   "我的标题",
@@ -69,7 +69,7 @@ func TestArticleService_PublishV1(t *testing.T) {
 					},
 				}).Return(errors.New("保存失败"))
 
-				rr := articlerepomocks.NewMockArticleReaderRepository(ctrl)
+				rr := repomocks.NewMockArticleReaderRepository(ctrl)
 				return ar, rr
 			},
 			art: domain.Article{
@@ -85,7 +85,7 @@ func TestArticleService_PublishV1(t *testing.T) {
 		{
 			name: "修改保存到线上库失败-重试都失败",
 			mock: func(ctrl *gomock.Controller) (repository.ArticleAuthorRepository, repository.ArticleReaderRepository) {
-				ar := articlerepomocks.NewMockArticleAuthorRepository(ctrl)
+				ar := repomocks.NewMockArticleAuthorRepository(ctrl)
 				ar.EXPECT().Update(gomock.Any(), domain.Article{
 					Id:      7,
 					Title:   "我的标题",
@@ -95,7 +95,7 @@ func TestArticleService_PublishV1(t *testing.T) {
 					},
 				}).Return(nil)
 
-				rr := articlerepomocks.NewMockArticleReaderRepository(ctrl)
+				rr := repomocks.NewMockArticleReaderRepository(ctrl)
 				rr.EXPECT().Save(gomock.Any(), domain.Article{
 					Id:      7,
 					Title:   "我的标题",
@@ -119,7 +119,7 @@ func TestArticleService_PublishV1(t *testing.T) {
 		{
 			name: "修改保存到线上库失败-重试成功",
 			mock: func(ctrl *gomock.Controller) (repository.ArticleAuthorRepository, repository.ArticleReaderRepository) {
-				ar := articlerepomocks.NewMockArticleAuthorRepository(ctrl)
+				ar := repomocks.NewMockArticleAuthorRepository(ctrl)
 				ar.EXPECT().Update(gomock.Any(), domain.Article{
 					Id:      7,
 					Title:   "我的标题",
@@ -129,7 +129,7 @@ func TestArticleService_PublishV1(t *testing.T) {
 					},
 				}).Return(nil)
 
-				rr := articlerepomocks.NewMockArticleReaderRepository(ctrl)
+				rr := repomocks.NewMockArticleReaderRepository(ctrl)
 				rr.EXPECT().Save(gomock.Any(), domain.Article{
 					Id:      7,
 					Title:   "我的标题",

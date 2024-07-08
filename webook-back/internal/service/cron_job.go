@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/repository"
-	"github.com/zht-account/webook/pkg/logger"
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/repository"
+	"github.com/ac-zht/webook/pkg/logger"
 	"time"
 )
 
+//go:generate mockgen -source=./cron_job.go -package=svcmocks -destination=mocks/cron_job.mocks.go CronJobService
 type CronJobService interface {
 	Preempt(ctx context.Context) (domain.CronJob, error)
 	ResetNextTime(ctx context.Context, job domain.CronJob) error
@@ -35,21 +36,28 @@ func (c *cronJobService) Preempt(ctx context.Context) (domain.CronJob, error) {
 	if err != nil {
 		return domain.CronJob{}, err
 	}
-	ch := make(chan struct{})
+	//ch := make(chan struct{})
+	//go func() {
+	//	ticker := time.NewTicker(c.refreshInterval)
+	//	defer ticker.Stop()
+	//	for {
+	//		select {
+	//		case <-ch:
+	//			return
+	//		case <-ticker.C:
+	//			c.refresh(j.Id)
+	//		}
+	//	}
+	//}()
+	ticker := time.NewTicker(c.refreshInterval)
 	go func() {
-		ticker := time.NewTicker(c.refreshInterval)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ch:
-				return
-			case <-ticker.C:
-				c.refresh(j.Id)
-			}
+		for range ticker.C {
+			c.refresh(j.Id)
 		}
 	}()
 	j.CancelFunc = func() {
-		close(ch)
+		//close(ch)
+		ticker.Stop()
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		err := c.repo.Release(ctx, j.Id)

@@ -1,6 +1,6 @@
 package web
 
-import "github.com/zht-account/webook/internal/domain"
+import "github.com/ac-zht/webook/internal/domain"
 
 type ArticleVo struct {
 	Id       int64  `json:"id"`

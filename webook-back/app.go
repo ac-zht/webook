@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/ac-zht/webook/internal/events"
 	"github.com/gin-gonic/gin"
-	"github.com/zht-account/webook/internal/events"
 )
 
 type App struct {

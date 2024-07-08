@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/zht-account/webook/internal/repository"
-	"github.com/zht-account/webook/internal/service/sms"
+	"github.com/ac-zht/webook/internal/repository"
+	"github.com/ac-zht/webook/internal/service/sms"
 	"math/rand"
 	"strconv"
 )

@@ -2,7 +2,7 @@ package startup
 
 import (
 	"context"
-	"github.com/redis/go-redis/v9"
+	"github.com/go-redis/redis/v9"
 )
 
 var redisClient redis.Cmdable

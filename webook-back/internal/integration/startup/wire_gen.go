@@ -7,18 +7,18 @@
 package startup
 
 import (
+	repository2 "github.com/ac-zht/webook/interactive/repository"
+	cache2 "github.com/ac-zht/webook/interactive/repository/cache"
+	dao2 "github.com/ac-zht/webook/interactive/repository/dao"
+	service2 "github.com/ac-zht/webook/interactive/service"
+	article2 "github.com/ac-zht/webook/internal/events/article"
+	"github.com/ac-zht/webook/internal/repository"
+	"github.com/ac-zht/webook/internal/repository/cache"
+	"github.com/ac-zht/webook/internal/repository/dao"
+	"github.com/ac-zht/webook/internal/repository/dao/article"
+	"github.com/ac-zht/webook/internal/service"
+	"github.com/ac-zht/webook/internal/web"
 	"github.com/google/wire"
-	repository2 "github.com/zht-account/webook/interactive/repository"
-	cache2 "github.com/zht-account/webook/interactive/repository/cache"
-	dao2 "github.com/zht-account/webook/interactive/repository/dao"
-	service2 "github.com/zht-account/webook/interactive/service"
-	article2 "github.com/zht-account/webook/internal/events/article"
-	"github.com/zht-account/webook/internal/repository"
-	"github.com/zht-account/webook/internal/repository/cache"
-	"github.com/zht-account/webook/internal/repository/dao"
-	"github.com/zht-account/webook/internal/repository/dao/article"
-	"github.com/zht-account/webook/internal/service"
-	"github.com/zht-account/webook/internal/web"
 )
 
 // Injectors from wire.go:

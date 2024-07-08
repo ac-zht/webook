@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"github.com/zht-account/webook/internal/domain"
-	events "github.com/zht-account/webook/internal/events/article"
-	"github.com/zht-account/webook/internal/repository"
-	"github.com/zht-account/webook/pkg/logger"
+	"github.com/ac-zht/webook/internal/domain"
+	events "github.com/ac-zht/webook/internal/events/article"
+	"github.com/ac-zht/webook/internal/repository"
+	"github.com/ac-zht/webook/pkg/logger"
 	"time"
 )
 

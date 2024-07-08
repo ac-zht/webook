@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/zht-account/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/domain"
 )
 
 type HistoryRecordRepository interface {

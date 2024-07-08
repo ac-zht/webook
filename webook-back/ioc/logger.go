@@ -1,8 +1,8 @@
 package ioc
 
 import (
+	"github.com/ac-zht/webook/pkg/logger"
 	"github.com/spf13/viper"
-	"github.com/zht-account/webook/pkg/logger"
 	"go.uber.org/zap"
 )
 

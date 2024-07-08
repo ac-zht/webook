@@ -1,6 +1,6 @@
 package startup
 
-import "github.com/zht-account/webook/pkg/logger"
+import "github.com/ac-zht/webook/pkg/logger"
 
 func InitLog() logger.Logger {
 	return logger.NewNoOpLogger()

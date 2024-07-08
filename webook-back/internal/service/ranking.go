@@ -2,15 +2,16 @@ package service
 
 import (
 	"context"
+	"github.com/ac-zht/gotools/queue"
+	intrv1 "github.com/ac-zht/webook/interactive/service"
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/repository"
 	"github.com/ecodeclub/ekit/slice"
-	"github.com/zht-account/gotools/queue"
-	intrv1 "github.com/zht-account/webook/interactive/service"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/repository"
 	"math"
 	"time"
 )
 
+//go:generate mockgen -source=./ranking.go -package=svcmocks -destination=mocks/ranking.mocks.go RankingService
 type RankingService interface {
 	RankTopN(ctx context.Context) error
 	TopN(ctx context.Context) ([]domain.Article, error)
@@ -84,7 +85,7 @@ func (b *BatchRankingService) rankTopN(ctx context.Context) ([]domain.Article, e
 			}
 			score := b.scoreFunc(intr.LikeCnt, art.Utime)
 			val, _ := que.Peek()
-			//要和堆定作比较
+			//要和堆顶作比较
 			if score > val.score {
 				ele := Score{art: art, score: score}
 				err = que.Enqueue(ele)

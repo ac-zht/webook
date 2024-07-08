@@ -1,8 +1,8 @@
 package web
 
 import (
+	"github.com/ac-zht/webook/pkg/ginx"
 	"github.com/gin-gonic/gin"
-	"github.com/zht-account/webook/pkg/ginx"
 )
 
 type handler interface {

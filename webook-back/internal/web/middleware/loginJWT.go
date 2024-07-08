@@ -1,10 +1,10 @@
 package middleware
 
 import (
+	ijwt "github.com/ac-zht/webook/internal/web/jwt"
 	"github.com/ecodeclub/ekit/set"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	ijwt "github.com/zht-account/webook/internal/web/jwt"
 	"net/http"
 	"time"
 )

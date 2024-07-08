@@ -1,13 +1,13 @@
 package web
 
 import (
+	"github.com/ac-zht/webook/internal/domain"
+	"github.com/ac-zht/webook/internal/errs"
+	"github.com/ac-zht/webook/internal/service"
+	ijwt "github.com/ac-zht/webook/internal/web/jwt"
+	"github.com/ac-zht/webook/pkg/ginx"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-gonic/gin"
-	"github.com/zht-account/webook/internal/domain"
-	"github.com/zht-account/webook/internal/errs"
-	"github.com/zht-account/webook/internal/service"
-	ijwt "github.com/zht-account/webook/internal/web/jwt"
-	"github.com/zht-account/webook/pkg/ginx"
 	"go.uber.org/zap"
 	"net/http"
 	"time"

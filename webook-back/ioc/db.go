@@ -1,8 +1,9 @@
 package ioc
 
 import (
+	"github.com/ac-zht/webook/internal/repository/dao"
+	prometheus2 "github.com/ac-zht/webook/pkg/gormx/callbacks/prometheus"
 	"github.com/spf13/viper"
-	prometheus2 "github.com/zht-account/webook/pkg/gormx/callbacks/prometheus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/plugin/opentelemetry/tracing"
@@ -43,7 +44,7 @@ func InitDB() *gorm.DB {
 		panic(err)
 	}
 
-	//err = dao.InitTables(db)
+	err = dao.InitTables(db)
 	if err != nil {
 		panic(err)
 	}
